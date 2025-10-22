@@ -27,6 +27,9 @@
                 </a>
                 @else
                 <a href="{{ route('dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
+                    Dashboard
+                </a>
+                <a href="{{ route('horario.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Mi Horario
                 </a>
                 <a href="{{ route('asistencia.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
