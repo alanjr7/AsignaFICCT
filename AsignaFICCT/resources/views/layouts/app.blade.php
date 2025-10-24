@@ -28,6 +28,9 @@
                 <a href="{{ route('materias.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Gestión de Materias
                 </a>
+                <a href="{{ route('grupos.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
+                    Gestión de Grupos
+                </a>
                 <a href="{{ route('aulas.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Gestión de Aulas
                 </a>
