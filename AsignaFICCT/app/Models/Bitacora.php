@@ -19,6 +19,18 @@ class Bitacora extends Model
         'fecha_y_hora' => 'datetime',
     ];
 
+    // Accesor para mostrar fecha en formato boliviano
+    public function getFechaLegibleAttribute()
+    {
+        return $this->fecha_y_hora->format('d/m/Y H:i:s');
+    }
+
+    // Accesor para mostrar hora en formato 12h boliviano
+    public function getHoraLegibleAttribute()
+    {
+        return $this->fecha_y_hora->format('h:i A');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
