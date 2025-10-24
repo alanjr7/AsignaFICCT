@@ -5,7 +5,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\HorarioController;
-
+use App\Http\Controllers\MateriaController;
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
@@ -19,7 +19,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
 });
-
+//ruta para materias
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::resource('users', UserController::class);
+    Route::resource('materias', MateriaController::class);
+    Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
+});
 // Rutas para docentes
 Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');

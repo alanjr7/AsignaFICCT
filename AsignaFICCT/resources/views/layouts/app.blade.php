@@ -25,6 +25,9 @@
                 <a href="{{ route('bitacora.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Bitácora
                 </a>
+                <a href="{{ route('materias.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
+                    Gestión de Materias
+                </a>
                 @else
                 <a href="{{ route('dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Dashboard
