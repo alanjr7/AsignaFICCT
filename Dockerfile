@@ -1,7 +1,7 @@
 # Usar una imagen base con PHP y Apache
 FROM php:8.2-apache
 
-# Instalar dependencias (SOLO las necesarias para PHP)
+# Instalar dependencias
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev zip unzip git \
     && docker-php-ext-install pdo pdo_pgsql zip \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 ENV PORT=10000
 RUN sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
-# Configurar ServerName para evitar warnings
+# Configurar ServerName
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Copiar proyecto
@@ -22,28 +22,22 @@ WORKDIR /var/www/html
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
 
-# Permisos
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 storage bootstrap/cache
+# Permisos básicos
+RUN chmod -R 755 storage bootstrap/cache
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# NO configurar PostgreSQL aquí - usar variables de Railway
-RUN [ -f .env ] || cp .env.example .env
-
 # Generar key
 RUN php artisan key:generate --force
 
-# Solo optimizar (sin migraciones durante el build)
-RUN php artisan config:clear && \
-    php artisan route:clear && \
-    php artisan view:clear
+# Limpiar cache
+RUN php artisan config:clear
 
 EXPOSE 10000
 
-# Script de inicio
+# Script de inicio corregido
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 CMD ["/usr/local/bin/start.sh"]
