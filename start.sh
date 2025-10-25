@@ -17,16 +17,28 @@ if ! grep -q "APP_KEY=base64:" .env; then
     php artisan key:generate --force
 fi
 
-# Esperar a que la base de datos esté disponible (opcional pero recomendado)
-echo "Esperando a que la base de datos esté disponible..."
-while ! nc -z $DB_HOST $DB_PORT; do
-  sleep 1
-done
-echo "Base de datos disponible!"
+# Pequeña pausa para permitir que la BD esté lista (opcional)
+sleep 5
 
-# Ejecutar migraciones solo si APP_ENV no es local (para producción)
-if [ "$APP_ENV" != "local" ]; then
-    php artisan migrate --force
+# Ejecutar migraciones con reintentos automáticos
+echo "Ejecutando migraciones..."
+max_attempts=3
+attempt=1
+
+while [ $attempt -le $max_attempts ]; do
+    if php artisan migrate --force; then
+        echo "Migraciones ejecutadas exitosamente"
+        break
+    else
+        echo "Intento $attempt de $max_attempts falló, reintentando en 5 segundos..."
+        sleep 5
+        ((attempt++))
+    fi
+done
+
+# Si fallan todas las migraciones, continuar de todos modos (para resiliencia)
+if [ $attempt -gt $max_attempts ]; then
+    echo "ADVERTENCIA: No se pudieron ejecutar las migraciones, pero el servidor continuará iniciando"
 fi
 
 # Limpiar cache
@@ -36,4 +48,5 @@ php artisan view:clear
 php artisan optimize
 
 # Iniciar Apache en primer plano
+echo "Iniciando servidor Apache..."
 exec apache2-foreground
