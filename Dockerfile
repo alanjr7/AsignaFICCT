@@ -25,19 +25,17 @@ RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-av
 # Permisos básicos
 RUN chmod -R 755 storage bootstrap/cache
 
-# Composer
+# Composer (NO generar key aquí)
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Generar key
-RUN php artisan key:generate --force
-
-# Limpiar cache
+# NO ejecutar artisan commands durante el build
+# Solo limpiar cache
 RUN php artisan config:clear
 
 EXPOSE 10000
 
-# Script de inicio corregido
+# Script de inicio
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 CMD ["/usr/local/bin/start.sh"]

@@ -6,43 +6,43 @@ cd /var/www/html
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R 775 storage bootstrap/cache
 
-# Generar key si no existe
+# Crear .env si no existe y configurar variables básicas
 if [ ! -f .env ]; then
     cp .env.example .env
+    # Configuración básica para Laravel
+    echo "APP_ENV=production" >> .env
+    echo "APP_DEBUG=false" >> .env
+    echo "LOG_CHANNEL=stderr" >> .env
 fi
 
+# Generar APP_KEY solo si no existe
 if ! grep -q "APP_KEY=base64:" .env; then
     php artisan key:generate --force
 fi
 
 # Esperar a que la base de datos esté lista
-echo "Esperando a que la base de datos esté lista..."
+echo "⏳ Esperando a que la base de datos esté lista..."
 sleep 10
 
-# Verificar conexión a la base de datos de forma más simple
-echo "Verificando conexión a la base de datos..."
-timeout 30 bash -c 'until php -r "try { 
-    new PDO(\"pgsql:host=\" . getenv(\"DB_HOST\") . \";port=\" . getenv(\"DB_PORT\") . \";dbname=\" . getenv(\"DB_DATABASE\"), 
-    getenv(\"DB_USERNAME\"), getenv(\"DB_PASSWORD\")); 
-    echo \"Conexión exitosa\"; 
+# Verificar conexión a la base de datos de forma simple
+echo "🔍 Verificando conexión a la base de datos..."
+if php -r "
+try {
+    \$pdo = new PDO('pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+    echo '✅ Conexión a BD exitosa' . PHP_EOL;
     exit(0);
-} catch (Exception \$e) { 
-    echo \"Error: \" . \$e->getMessage(); 
+} catch (Exception \$e) {
+    echo '❌ Error conectando a BD: ' . \$e->getMessage() . PHP_EOL;
     exit(1);
-}" 2>/dev/null; do 
-    echo "Reintentando conexión en 5 segundos...";
-    sleep 5; 
-done'
-
-if [ $? -eq 0 ]; then
-    echo "✅ Conexión a BD exitosa"
+}
+"; then
+    echo "✅ Conexión verificada"
 else
-    echo "❌ No se pudo conectar a la base de datos después de 30 segundos"
-    # Continuar de todos modos para resiliencia
+    echo "⚠️  No se pudo verificar la conexión, continuando de todos modos..."
 fi
 
 # SOLUCIÓN TEMPORAL: Crear tabla aulas si no existe
-echo "Verificando tabla aulas..."
+echo "📊 Verificando tabla aulas..."
 php -r "
 try {
     require_once 'vendor/autoload.php';
@@ -50,7 +50,7 @@ try {
     \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
     
     if (!\Illuminate\Support\Facades\Schema::hasTable('aulas')) {
-        \Illuminate\Support\Facades\DB::statement('CREATE TABLE aulas (
+        \Illuminate\Support\Facades\DB::statement('CREATE TABLE IF NOT EXISTS aulas (
             id BIGSERIAL PRIMARY KEY,
             nombre VARCHAR(255),
             capacidad INTEGER,
@@ -58,17 +58,17 @@ try {
             created_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP
         )');
-        echo 'Tabla aulas creada exitosamente' . PHP_EOL;
+        echo '✅ Tabla aulas verificada/creada' . PHP_EOL;
     } else {
-        echo 'Tabla aulas ya existe' . PHP_EOL;
+        echo '✅ Tabla aulas ya existe' . PHP_EOL;
     }
 } catch (Exception \$e) {
-    echo 'Error con tabla aulas: ' . \$e->getMessage() . PHP_EOL;
+    echo '⚠️  Error con tabla aulas: ' . \$e->getMessage() . PHP_EOL;
 }
 "
 
 # Ejecutar migraciones con reintentos
-echo "Ejecutando migraciones..."
+echo "🔄 Ejecutando migraciones..."
 max_attempts=3
 attempt=1
 
@@ -84,11 +84,11 @@ while [ $attempt -le $max_attempts ]; do
 done
 
 if [ $attempt -gt $max_attempts ]; then
-    echo "⚠️ ADVERTENCIA: No se pudieron ejecutar las migraciones, pero el servidor continuará iniciando"
+    echo "⚠️  No se pudieron ejecutar las migraciones, continuando..."
 fi
 
 # Limpiar y optimizar
-echo "Limpiando cache..."
+echo "🧹 Limpiando cache..."
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
