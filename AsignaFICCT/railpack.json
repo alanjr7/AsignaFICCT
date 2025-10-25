@@ -1,6 +1,6 @@
 {
   "build": {
-    "command": "composer install --no-dev --optimize-autoloader"
+    "command": "cd AsignaFICCT && composer install --no-dev --optimize-autoloader"
   },
   "start": {
     "command": "bash start.sh"
