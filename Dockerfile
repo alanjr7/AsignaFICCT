@@ -3,9 +3,13 @@ FROM php:8.2-apache
 
 # Instalar dependencias
 RUN apt-get update && apt-get install -y \
-    libpq-dev libzip-dev zip unzip git \
+    libpq-dev libzip-dev zip unzip git curl \
     && docker-php-ext-install pdo pdo_pgsql zip \
     && a2enmod rewrite
+
+# Instalar Node.js y npm para Vite
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
 # Usar variable de entorno para el puerto
 ENV PORT=10000
@@ -22,20 +26,19 @@ WORKDIR /var/www/html
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf
 
-# Permisos básicos
+# Permisos básicos durante build
 RUN chmod -R 755 storage bootstrap/cache
 
-# Composer (NO generar key aquí)
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# NO ejecutar artisan commands durante el build
-# Solo limpiar cache
-RUN php artisan config:clear
+# Compilar assets durante build
+RUN npm install && npm run build
 
 EXPOSE 10000
 
-# Script de inicio
+# Script de inicio corregido
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 CMD ["/usr/local/bin/start.sh"]
