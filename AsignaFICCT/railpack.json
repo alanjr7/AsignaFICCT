@@ -1,0 +1,12 @@
+{
+  "build": {
+    "command": "composer install --no-dev --optimize-autoloader"
+  },
+  "start": {
+    "command": "bash start.sh"
+  },
+  "env": {
+    "APP_ENV": "production",
+    "APP_DEBUG": "false"
+  }
+}

@@ -16,47 +16,101 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sigla Grupo</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cupos</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materias</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Docentes</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horarios</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cupos</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($grupos as $grupo)
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $grupo->sigla_grupo }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">{{ $grupo->materia->nombre_materia }}</div>
-                        <div class="text-sm text-gray-500">{{ $grupo->materia->sigla_materia }}</div>
+                        <div class="font-medium text-gray-900">{{ $grupo->sigla_grupo }}</div>
+                        @if($grupo->descripcion)
+                            <div class="text-sm text-gray-500">{{ Str::limit($grupo->descripcion, 50) }}</div>
+                        @endif
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $grupo->aula->nro_aula }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $grupo->horario->dias_semana }}<br>
-                        {{ \Carbon\Carbon::parse($grupo->horario->hora_inicio)->format('H:i') }} - 
-                        {{ \Carbon\Carbon::parse($grupo->horario->hora_fin)->format('H:i') }}
+                    
+                    <!-- Materias -->
+                    <td class="px-6 py-4">
+                        @if($grupo->grupoMaterias->count() > 0)
+                            <div class="space-y-1">
+                                @foreach($grupo->grupoMaterias as $grupoMateria)
+                                    <div class="text-sm">
+                                        <span class="font-medium text-gray-900">{{ $grupoMateria->materia->sigla_materia }}</span>
+                                        <span class="text-gray-500">- {{ $grupoMateria->materia->nombre_materia }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-sm text-gray-500">Sin materias</span>
+                        @endif
                     </td>
+                    
+                    <!-- Docentes -->
+                    <td class="px-6 py-4">
+                        @if($grupo->grupoMaterias->count() > 0)
+                            <div class="space-y-1">
+                                @foreach($grupo->grupoMaterias as $grupoMateria)
+                                    @if($grupoMateria->docente)
+                                        <div class="text-sm text-gray-900">
+                                            {{ $grupoMateria->docente->user->nombre }}
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-red-500">Sin docente</span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-sm text-gray-500">-</span>
+                        @endif
+                    </td>
+                    
+                    <!-- Horarios -->
+                    <td class="px-6 py-4">
+                        @if($grupo->grupoMaterias->count() > 0)
+                            <div class="space-y-1">
+                                @foreach($grupo->grupoMaterias as $grupoMateria)
+                                    @if($grupoMateria->horario)
+                                        <div class="text-sm">
+                                            <span class="font-medium text-gray-900">{{ $grupoMateria->horario->dias_semana }}</span>
+                                            <div class="text-gray-500 text-xs">
+                                                {{ \Carbon\Carbon::parse($grupoMateria->horario->hora_inicio)->format('H:i') }} - 
+                                                {{ \Carbon\Carbon::parse($grupoMateria->horario->hora_fin)->format('H:i') }}
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-red-500">Sin horario</span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-sm text-gray-500">-</span>
+                        @endif
+                    </td>
+                    
+                    <!-- Cupos -->
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         Min: {{ $grupo->cupo_minimo }}<br>
                         Max: {{ $grupo->cupo_maximo }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        @foreach($grupo->docentes as $docente)
-                            <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-1">
-                                {{ $docente->user->nombre }}
-                            </span><br>
-                        @endforeach
-                    </td>
+                    
+                    <!-- Acciones -->
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <a href="{{ route('grupos.show', $grupo) }}" class="text-blue-600 hover:text-blue-900">Ver</a>
-                        <a href="{{ route('grupos.edit', $grupo) }}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
+                        <a href="{{ route('grupos.show', $grupo) }}" class="text-blue-600 hover:text-blue-900" title="Ver detalles">
+                            Ver
+                        </a>
+                        <a href="{{ route('grupos.edit', $grupo) }}" class="text-indigo-600 hover:text-indigo-900" title="Editar grupo">
+                            Editar
+                        </a>
                         <form action="{{ route('grupos.destroy', $grupo) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-900" 
-                                onclick="return confirm('¿Eliminar grupo {{ $grupo->sigla_grupo }}?')">
+                                onclick="return confirm('¿Eliminar grupo {{ $grupo->sigla_grupo }}?')"
+                                title="Eliminar grupo">
                                 Eliminar
                             </button>
                         </form>
@@ -64,7 +118,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                         No hay grupos registrados.
                     </td>
                 </tr>

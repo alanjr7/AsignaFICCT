@@ -17,9 +17,9 @@ class AdminUserSeeder extends Seeder
         if (!$existingUser) {
             $user = User::create([
                 'ci' => '1234567',
-                'nombre' => 'Administrador',
-                'correo' => 'admin@ficct.edu.bo',
-                'password' => Hash::make('admin123'),
+                'nombre' => 'alan josue ribera',
+                'correo' => 'alan@gmail.com',
+                'password' => Hash::make('12345678'),
                 'rol' => 'admin',
             ]);
 

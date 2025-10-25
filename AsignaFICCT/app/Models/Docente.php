@@ -20,15 +20,29 @@ class Docente extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relación muchos a muchos con Grupos
-    public function grupos()
+    // Relación con grupo_materia (materias que imparte)
+    public function grupoMaterias()
     {
-        return $this->belongsToMany(Grupo::class, 'docente_grupo', 'docente_id', 'grupo_id');
+        return $this->hasMany(GrupoMateria::class);
     }
 
-    // Obtener horario del docente
-    public function getHorarioAttribute()
+    // Obtener grupos donde imparte clase
+    public function grupos()
     {
-        return $this->grupos()->with(['horario', 'materia', 'aula'])->get();
+        return $this->belongsToMany(Grupo::class, 'grupo_materia', 'docente_id', 'grupo_id')
+                    ->withPivot('materia_id', 'aula_id', 'horario_id');
+    }
+
+    // Obtener materias que imparte
+    public function materias()
+    {
+        return $this->belongsToMany(Materia::class, 'grupo_materia', 'docente_id', 'materia_id')
+                    ->withPivot('grupo_id', 'aula_id', 'horario_id');
+    }
+
+    // Obtener horario completo del docente
+    public function getHorarioCompletoAttribute()
+    {
+        return $this->grupoMaterias()->with(['grupo', 'materia', 'aula', 'horario'])->get();
     }
 }

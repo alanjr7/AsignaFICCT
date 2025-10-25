@@ -10,15 +10,10 @@ return new class extends Migration
     {
         Schema::create('grupos', function (Blueprint $table) {
             $table->string('sigla_grupo')->primary(); // Clave primaria
-            $table->string('sigla_materia');
-            $table->foreignId('aula_id')->constrained('aulas')->onDelete('cascade');
-            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
             $table->integer('cupo_maximo');
             $table->integer('cupo_minimo');
+            $table->text('descripcion')->nullable();
             $table->timestamps();
-
-            // Clave foránea hacia materias
-            $table->foreign('sigla_materia')->references('sigla_materia')->on('materias')->onDelete('cascade');
         });
     }
 

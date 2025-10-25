@@ -24,12 +24,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
       Route::resource('aulas', AulaController::class);
 
-      // Nuevas rutas para grupos
-    Route::resource('grupos', GrupoController::class);
-    Route::get('/grupos/{grupo}/asignar-docente', [DocenteGrupoController::class, 'create'])->name('grupos.asignar-docente.create');
-    Route::post('/grupos/{grupo}/asignar-docente', [DocenteGrupoController::class, 'store'])->name('grupos.asignar-docente.store');
-    Route::delete('/grupos/{grupo}/docente/{docente}', [DocenteGrupoController::class, 'destroy'])->name('grupos.asignar-docente.destroy');
-
+  // Rutas para grupos
+Route::resource('grupos', GrupoController::class);
+Route::post('/grupos/{grupo}/agregar-materia', [GrupoController::class, 'agregarMateria'])->name('grupos.agregar-materia');
+Route::delete('/grupos/{grupo}/materia/{grupoMateria}', [GrupoController::class, 'eliminarMateria'])->name('grupos.eliminar-materia');
 });
 //ruta para materias
 Route::middleware(['auth', 'role:admin'])->group(function () {

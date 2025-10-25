@@ -13,70 +13,14 @@
             @csrf
             @method('PUT')
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Sigla Grupo -->
-                <div class="md:col-span-2">
+                <div>
                     <label for="sigla_grupo" class="block text-sm font-medium text-gray-700">Sigla del Grupo *</label>
                     <input type="text" name="sigla_grupo" id="sigla_grupo" value="{{ old('sigla_grupo', $grupo->sigla_grupo) }}" 
                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="Ej: MAT101-G1" required>
+                           placeholder="Ej: INF-101-A" required>
                     @error('sigla_grupo')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Materia -->
-                <div>
-                    <label for="sigla_materia" class="block text-sm font-medium text-gray-700">Materia *</label>
-                    <select name="sigla_materia" id="sigla_materia" 
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            required>
-                        <option value="">Seleccionar materia</option>
-                        @foreach($materias as $materia)
-                            <option value="{{ $materia->sigla_materia }}" {{ old('sigla_materia', $grupo->sigla_materia) == $materia->sigla_materia ? 'selected' : '' }}>
-                                {{ $materia->sigla_materia }} - {{ $materia->nombre_materia }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('sigla_materia')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Aula -->
-                <div>
-                    <label for="aula_id" class="block text-sm font-medium text-gray-700">Aula *</label>
-                    <select name="aula_id" id="aula_id" 
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            required>
-                        <option value="">Seleccionar aula</option>
-                        @foreach($aulas as $aula)
-                            <option value="{{ $aula->id }}" {{ old('aula_id', $grupo->aula_id) == $aula->id ? 'selected' : '' }}>
-                                {{ $aula->nro_aula }} - {{ $aula->tipo }} (Cap: {{ $aula->capacidad }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('aula_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Horario -->
-                <div class="md:col-span-2">
-                    <label for="horario_id" class="block text-sm font-medium text-gray-700">Horario *</label>
-                    <select name="horario_id" id="horario_id" 
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            required>
-                        <option value="">Seleccionar horario</option>
-                        @foreach($horarios as $horario)
-                            <option value="{{ $horario->id }}" {{ old('horario_id', $grupo->horario_id) == $horario->id ? 'selected' : '' }}>
-                                {{ $horario->dias_semana }} - 
-                                {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} a 
-                                {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('horario_id')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -102,32 +46,57 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <!-- Descripción -->
+                <div class="md:col-span-3">
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <textarea name="descripcion" id="descripcion" rows="3"
+                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Descripción opcional del grupo">{{ old('descripcion', $grupo->descripcion) }}</textarea>
+                </div>
             </div>
 
             <!-- Información actual del grupo -->
             <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h3 class="text-lg font-medium text-gray-700 mb-3">Información Actual del Grupo</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="font-medium">Materia:</span> {{ $grupo->materia->nombre_materia }} ({{ $grupo->materia->sigla_materia }})
+                <h3 class="text-lg font-medium text-gray-700 mb-3">Materias Actuales del Grupo</h3>
+                
+                @if($grupo->grupoMaterias->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($grupo->grupoMaterias as $grupoMateria)
+                        <div class="border border-gray-200 rounded-lg p-3 bg-white">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <span class="font-medium">Materia:</span> 
+                                    {{ $grupoMateria->materia->nombre_materia }} ({{ $grupoMateria->materia->sigla_materia }})
+                                </div>
+                                <div>
+                                    <span class="font-medium">Docente:</span> 
+                                    {{ $grupoMateria->docente->user->nombre ?? 'Sin docente' }}
+                                </div>
+                                <div>
+                                    <span class="font-medium">Aula:</span> 
+                                    {{ $grupoMateria->aula->nro_aula ?? 'Sin aula' }}
+                                </div>
+                                <div>
+                                    <span class="font-medium">Horario:</span> 
+                                    {{ $grupoMateria->horario->dias_semana ?? 'Sin horario' }} - 
+                                    @if($grupoMateria->horario)
+                                        {{ \Carbon\Carbon::parse($grupoMateria->horario->hora_inicio)->format('H:i') }} a 
+                                        {{ \Carbon\Carbon::parse($grupoMateria->horario->hora_fin)->format('H:i') }}
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
                     </div>
-                    <div>
-                        <span class="font-medium">Aula:</span> {{ $grupo->aula->nro_aula }}
-                    </div>
-                    <div>
-                        <span class="font-medium">Horario:</span> {{ $grupo->horario->dias_semana }} - 
-                        {{ \Carbon\Carbon::parse($grupo->horario->hora_inicio)->format('H:i') }} a 
-                        {{ \Carbon\Carbon::parse($grupo->horario->hora_fin)->format('H:i') }}
-                    </div>
-                    <div>
-                        <span class="font-medium">Cupos:</span> Min: {{ $grupo->cupo_minimo }} / Max: {{ $grupo->cupo_maximo }}
-                    </div>
-                </div>
+                @else
+                    <p class="text-gray-500 text-sm">No hay materias asignadas a este grupo.</p>
+                @endif
             </div>
 
             <!-- Botones -->
             <div class="mt-8 flex justify-end space-x-3">
-                <a href="{{ route('grupos.index') }}" 
+                <a href="{{ route('grupos.show', $grupo) }}" 
                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition duration-200">
                     Cancelar
                 </a>

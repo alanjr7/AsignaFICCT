@@ -15,34 +15,34 @@ class Grupo extends Model
 
     protected $fillable = [
         'sigla_grupo',
-        'sigla_materia',
-        'aula_id',
-        'horario_id',
         'cupo_maximo',
         'cupo_minimo',
+        'descripcion',
     ];
 
-    // Relación con Materia
-    public function materia()
+    // Relación muchos a muchos con Materias a través de grupo_materia
+    public function materias()
     {
-        return $this->belongsTo(Materia::class, 'sigla_materia', 'sigla_materia');
+        return $this->belongsToMany(Materia::class, 'grupo_materia', 'grupo_id', 'materia_id')
+                    ->withPivot('id', 'docente_id', 'aula_id', 'horario_id')
+                    ->withTimestamps();
     }
 
-    // Relación con Aula
-    public function aula()
+    // Relación directa con grupo_materia
+    public function grupoMaterias()
     {
-        return $this->belongsTo(Aula::class);
+        return $this->hasMany(GrupoMateria::class, 'grupo_id', 'sigla_grupo');
     }
 
-    // Relación con Horario
-    public function horario()
-    {
-        return $this->belongsTo(Horario::class);
-    }
-
-    // Relación muchos a muchos con Docentes
+    // Obtener docentes a través de las materias asignadas
     public function docentes()
     {
-        return $this->belongsToMany(Docente::class, 'docente_grupo', 'grupo_id', 'docente_id');
+        return $this->hasManyThrough(Docente::class, GrupoMateria::class, 'grupo_id', 'id', 'sigla_grupo', 'docente_id');
+    }
+
+    // Obtener horarios del grupo
+    public function horarios()
+    {
+        return $this->hasManyThrough(Horario::class, GrupoMateria::class, 'grupo_id', 'id', 'sigla_grupo', 'horario_id');
     }
 }
