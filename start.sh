@@ -78,3 +78,6 @@ php artisan optimize
 
 echo "🚀 Iniciando servidor Apache..."
 exec apache2-foreground
+# Ejecutar el seeder de administrador
+echo "👤 Creando usuario administrador..."
+php artisan db:seed --class=AdminUserSeeder --force
