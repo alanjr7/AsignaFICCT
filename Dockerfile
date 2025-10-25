@@ -1,7 +1,7 @@
 # Usar una imagen base con PHP y Apache
 FROM php:8.2-apache
 
-# Instalar dependencias
+# Instalar dependencias (SOLO las necesarias para PHP)
 RUN apt-get update && apt-get install -y \
     libpq-dev libzip-dev zip unzip git \
     && docker-php-ext-install pdo pdo_pgsql zip \
@@ -30,14 +30,8 @@ RUN chown -R www-data:www-data /var/www/html \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Configuración básica sin ejecutar migraciones durante el build
+# NO configurar PostgreSQL aquí - usar variables de Railway
 RUN [ -f .env ] || cp .env.example .env
-
-# Configurar para PostgreSQL (pero NO ejecutar migraciones aquí)
-RUN echo "DB_CONNECTION=pgsql" >> .env && \
-    echo "SESSION_DRIVER=file" >> .env && \
-    echo "CACHE_STORE=file" >> .env && \
-    echo "QUEUE_CONNECTION=sync" >> .env
 
 # Generar key
 RUN php artisan key:generate --force
@@ -49,7 +43,7 @@ RUN php artisan config:clear && \
 
 EXPOSE 10000
 
-# Script de inicio que SÍ ejecutará las migraciones cuando el contenedor esté corriendo
+# Script de inicio
 COPY start.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start.sh
 CMD ["/usr/local/bin/start.sh"]
