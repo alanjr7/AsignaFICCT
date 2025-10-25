@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 ENV PORT=10000
 RUN sed -i "s/80/${PORT}/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
+# Configurar ServerName para evitar warnings
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # Copiar proyecto
 COPY . /var/www/html/
 WORKDIR /var/www/html
@@ -27,10 +30,28 @@ RUN chown -R www-data:www-data /var/www/html \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# Laravel setup
+# CONFIGURACIÓN CRÍTICA: Forzar PostgreSQL y preparar Laravel
 RUN [ -f .env ] || cp .env.example .env
+
+# Asegurar que use PostgreSQL en producción
+RUN echo "DB_CONNECTION=pgsql" >> .env && \
+    echo "SESSION_DRIVER=database" >> .env && \
+    echo "CACHE_STORE=database" >> .env && \
+    echo "QUEUE_CONNECTION=database" >> .env
+
+# Generar key
 RUN php artisan key:generate --force
-RUN php artisan config:cache
+
+# Crear tablas necesarias para sesiones
+RUN php artisan session:table
+
+# Ejecutar migraciones (IMPORTANTE)
+RUN php artisan migrate --force
+
+# Optimizar Laravel para producción
+RUN php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache
 
 EXPOSE 10000
 CMD ["apache2-foreground"]
