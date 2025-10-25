@@ -1,19 +1,39 @@
 #!/bin/bash
 
-# Entrar a la carpeta del proyecto
-cd AsignaFICCT
+# Navegar al directorio de la aplicación
+cd /var/www/html
 
-# Instalar dependencias
-composer install --no-dev --optimize-autoloader
+# Configurar permisos de almacenamiento
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 
-# Configurar aplicación
-php artisan key:generate
-php artisan migrate --force
-php artisan storage:link
+# Generar key de Laravel si no existe
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
+
+# Solo generar key si no existe
+if ! grep -q "APP_KEY=base64:" .env; then
+    php artisan key:generate --force
+fi
+
+# Esperar a que la base de datos esté disponible (opcional pero recomendado)
+echo "Esperando a que la base de datos esté disponible..."
+while ! nc -z $DB_HOST $DB_PORT; do
+  sleep 1
+done
+echo "Base de datos disponible!"
+
+# Ejecutar migraciones solo si APP_ENV no es local (para producción)
+if [ "$APP_ENV" != "local" ]; then
+    php artisan migrate --force
+fi
+
+# Limpiar cache
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
 php artisan optimize
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
 
-# Iniciar servidor
-php artisan serve --host=0.0.0.0 --port=$PORT
+# Iniciar Apache en primer plano
+exec apache2-foreground

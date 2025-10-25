@@ -30,25 +30,26 @@ RUN chown -R www-data:www-data /var/www/html \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# CONFIGURACIÓN CRÍTICA: Forzar PostgreSQL y preparar Laravel
+# Configuración básica sin ejecutar migraciones durante el build
 RUN [ -f .env ] || cp .env.example .env
 
-# Asegurar que use PostgreSQL en producción
+# Configurar para PostgreSQL (pero NO ejecutar migraciones aquí)
 RUN echo "DB_CONNECTION=pgsql" >> .env && \
-    echo "SESSION_DRIVER=database" >> .env && \
-    echo "CACHE_STORE=database" >> .env && \
-    echo "QUEUE_CONNECTION=database" >> .env
+    echo "SESSION_DRIVER=file" >> .env && \
+    echo "CACHE_STORE=file" >> .env && \
+    echo "QUEUE_CONNECTION=sync" >> .env
 
 # Generar key
 RUN php artisan key:generate --force
 
-# SOLUCIÓN: Ejecutar migraciones directamente (sin session:table)
-RUN php artisan migrate --force
-
-# Optimizar Laravel para producción
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Solo optimizar (sin migraciones durante el build)
+RUN php artisan config:clear && \
+    php artisan route:clear && \
+    php artisan view:clear
 
 EXPOSE 10000
-CMD ["apache2-foreground"]
+
+# Script de inicio que SÍ ejecutará las migraciones cuando el contenedor esté corriendo
+COPY start.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start.sh
+CMD ["/usr/local/bin/start.sh"]
