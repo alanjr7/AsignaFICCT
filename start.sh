@@ -59,7 +59,9 @@ else
     # Intentar migraciones individualmente
     php artisan migrate:status
 fi
-
+# Ejecutar el seeder de administrador
+echo "👤 Creando usuario administrador..."
+php artisan db:seed --class=AdminUserSeeder --force
 # SOLUCIÓN: Compilar assets de Vite si es necesario
 echo "🎨 Verificando assets de Vite..."
 if [ ! -f public/build/manifest.json ] && [ -f package.json ]; then
@@ -78,6 +80,3 @@ php artisan optimize
 
 echo "🚀 Iniciando servidor Apache..."
 exec apache2-foreground
-# Ejecutar el seeder de administrador
-echo "👤 Creando usuario administrador..."
-php artisan db:seed --class=AdminUserSeeder --force
