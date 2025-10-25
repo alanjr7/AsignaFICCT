@@ -34,7 +34,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
 # Compilar assets durante build
-RUN npm install && npm run build
+RUN npm install && npm run build --production
 
 EXPOSE 10000
 
