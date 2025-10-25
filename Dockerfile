@@ -42,10 +42,7 @@ RUN echo "DB_CONNECTION=pgsql" >> .env && \
 # Generar key
 RUN php artisan key:generate --force
 
-# Crear tablas necesarias para sesiones
-RUN php artisan session:table
-
-# Ejecutar migraciones (IMPORTANTE)
+# SOLUCIÓN: Ejecutar migraciones directamente (sin session:table)
 RUN php artisan migrate --force
 
 # Optimizar Laravel para producción
