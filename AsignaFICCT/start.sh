@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd AsignaFICCT
+
 # Instalar dependencias de PHP
 composer install --no-dev --optimize-autoloader
 
