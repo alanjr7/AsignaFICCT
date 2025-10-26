@@ -97,21 +97,11 @@
                                 <h2 class="text-2xl font-bold text-gray-800 mb-2">
                                     @if(request()->routeIs('login'))
                                         Iniciar Sesión
-                                    @elseif(request()->routeIs('register'))
-                                        Registro de Usuario
-                                    @elseif(request()->routeIs('password.request'))
-                                        Recuperar Contraseña
-                                    @else
-                                        Autenticación
                                     @endif
                                 </h2>
                                 <p class="text-gray-600 text-sm">
                                     @if(request()->routeIs('login'))
                                         Ingrese sus credenciales para acceder al sistema
-                                    @elseif(request()->routeIs('register'))
-                                        Complete el formulario para crear una cuenta
-                                    @elseif(request()->routeIs('password.request'))
-                                        Ingrese su email para recuperar la contraseña
                                     @endif
                                 </p>
                             </div>
@@ -123,19 +113,8 @@
                             <div class="mt-8 pt-6 border-t border-gray-200">
                                 @if(request()->routeIs('login'))
                                     <div class="text-center space-y-3">
-                                        <p class="text-gray-600 text-sm">
-                                            ¿Problemas para acceder?
-                                            <a href="{{ route('password.request') }}" class="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
-                                                Recuperar contraseña
-                                            </a>
-                                        </p>
                                         @if (Route::has('register'))
-                                        <p class="text-gray-600 text-sm">
-                                            ¿No tiene una cuenta?
-                                            <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
-                                                Solicitar acceso
-                                            </a>
-                                        </p>
+                                       
                                         @endif
                                     </div>
                                 @elseif(request()->routeIs('register'))

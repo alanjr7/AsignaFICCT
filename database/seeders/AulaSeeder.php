@@ -53,12 +53,11 @@ class AulaSeeder extends Seeder
 
         // Cuarto piso: aulas 41-46
         for ($i = 41; $i <= 46; $i++) {
-            // El aula 46 es laboratorio, las demás teóricas
-            $tipo = ($i == 46) ? 'Laboratorio' : 'Teórica';
+           
             
             $aulas[] = [
                 'nro_aula' => (string)$i,
-                'tipo' => $tipo,
+                'tipo' => 'Laboratorio',
                 'capacidad' => 40,
                 'piso' => 4,
                 'created_at' => now(),
