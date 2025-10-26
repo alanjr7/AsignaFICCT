@@ -63,7 +63,7 @@ fi
 echo "👤 Creando usuario administrador..."
 php artisan db:seed --class=AdminUserSeeder --force
 php artisan db:seed --class=HorarioSeeder --force
-php artisan db:seed --class=AulasSeeder --force
+php artisan db:seed --class=AulaSeeder --force
 # SOLUCIÓN: Compilar assets de Vite si es necesario
 echo "🎨 Verificando assets de Vite..."
 if [ ! -f public/build/manifest.json ] && [ -f package.json ]; then
