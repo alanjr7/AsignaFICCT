@@ -25,6 +25,37 @@ class Docente extends Model
     {
         return $this->hasMany(GrupoMateria::class);
     }
+    // Obtener materias asignadas con toda la información
+    public function getMateriasAsignadasAttribute()
+    {
+        return $this->grupoMaterias()
+            ->with(['grupo', 'materia', 'aula', 'horario'])
+            ->get()
+            ->groupBy('horario.dias_semana');
+    }
+// Obtener horario semanal organizado
+    public function getHorarioSemanalAttribute()
+    {
+        $materias = $this->grupoMaterias()
+            ->with(['grupo', 'materia', 'aula', 'horario'])
+            ->get();
+
+        $horario = [];
+        foreach ($materias as $materia) {
+            $dia = $materia->horario->dias_semana;
+            $horario[$dia][] = [
+                'materia' => $materia->materia->nombre_materia,
+                'sigla_materia' => $materia->materia->sigla_materia,
+                'grupo' => $materia->grupo->sigla_grupo,
+                'aula' => $materia->aula->nro_aula,
+                'tipo_aula' => $materia->aula->tipo,
+                'hora_inicio' => $materia->horario->hora_inicio,
+                'hora_fin' => $materia->horario->hora_fin,
+            ];
+        }
+
+        return $horario;
+    }
 
     // Obtener grupos donde imparte clase
     public function grupos()
