@@ -81,7 +81,7 @@
 
                 <!-- Mensajes de error generales -->
                 <div id="materias-error" class="hidden text-sm text-red-600 mt-2">
-                    Debe agregar al menos una materia al grupo
+                    Debe agregar al menos una materia completa al grupo
                 </div>
             </div>
 
@@ -226,10 +226,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const removerBtn = materiaItem.querySelector('.remover-materia');
 
         // Event listeners para cambios
-        materiaSelect.addEventListener('change', () => validarMateriaUnica(materiaItem, index));
-        docenteSelect.addEventListener('change', () => validarCombinacionMateriaDocente(materiaItem, index));
-        aulaSelect.addEventListener('change', () => validarCapacidadAula(materiaItem, index));
-        horarioSelect.addEventListener('change', () => validarHorarioUnico(materiaItem, index));
+        materiaSelect.addEventListener('change', () => {
+            validarMateriaUnica(materiaItem, index);
+            validarCombinacionMateriaDocente(materiaItem, index);
+            actualizarEstadoBotonEnviar();
+        });
+        
+        docenteSelect.addEventListener('change', () => {
+            validarCombinacionMateriaDocente(materiaItem, index);
+            actualizarEstadoBotonEnviar();
+        });
+        
+        aulaSelect.addEventListener('change', () => {
+            validarCapacidadAula(materiaItem, index);
+            actualizarEstadoBotonEnviar();
+        });
+        
+        horarioSelect.addEventListener('change', () => {
+            validarHorarioUnico(materiaItem, index);
+            actualizarEstadoBotonEnviar();
+        });
 
         // Remover materia
         removerBtn.addEventListener('click', function() {
@@ -251,16 +267,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function removerMateria(materiaItem, index) {
         // Remover de los conjuntos de control
-        const horarioId = materiaItem.querySelector('.horario-select').value;
-        const materiaId = materiaItem.querySelector('.materia-select').value;
-        const docenteId = materiaItem.querySelector('.docente-select').value;
+        const horarioSelect = materiaItem.querySelector('.horario-select');
+        const materiaSelect = materiaItem.querySelector('.materia-select');
+        const docenteSelect = materiaItem.querySelector('.docente-select');
+        
+        const horarioId = horarioSelect ? horarioSelect.value : null;
+        const materiaId = materiaSelect ? materiaSelect.value : null;
+        const docenteId = docenteSelect ? docenteSelect.value : null;
 
         if (horarioId) horariosSeleccionados.delete(horarioId);
+        
         if (materiaId && docenteId) {
             const clave = `${materiaId}-${docenteId}`;
             combinacionesMateriaDocente.delete(clave);
         }
-        if (materiaId) materiasSeleccionadas.delete(materiaId);
+        
+        if (materiaId) {
+            materiasSeleccionadas.forEach((value, key) => {
+                if (value === index) {
+                    materiasSeleccionadas.delete(key);
+                }
+            });
+        }
 
         materiaItem.remove();
         materiaCount--;
@@ -275,18 +303,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!materiaId) {
             limpiarError(errorDiv);
+            // Remover del mapa si estaba presente
+            materiasSeleccionadas.forEach((value, key) => {
+                if (value === index) {
+                    materiasSeleccionadas.delete(key);
+                }
+            });
             return true;
         }
 
         // Verificar si la materia ya está en otra posición
-        if (materiasSeleccionadas.has(materiaId) && materiasSeleccionadas.get(materiaId) !== index) {
-            mostrarError(errorDiv, 'Esta materia ya está asignada al grupo.');
+        let materiaDuplicada = false;
+        let materiaIndexExistente = null;
+
+        materiasSeleccionadas.forEach((existingIndex, existingMateriaId) => {
+            if (existingMateriaId === materiaId && existingIndex !== index) {
+                materiaDuplicada = true;
+                materiaIndexExistente = existingIndex;
+            }
+        });
+
+        if (materiaDuplicada) {
+            mostrarError(errorDiv, `Esta materia ya está asignada a la materia #${materiaIndexExistente + 1}.`);
             return false;
         } else {
-            // Actualizar el mapa
-            if (materiasSeleccionadas.has(materiaId)) {
-                materiasSeleccionadas.delete(materiaId);
-            }
+            // Remover cualquier entrada previa para este índice
+            materiasSeleccionadas.forEach((value, key) => {
+                if (value === index) {
+                    materiasSeleccionadas.delete(key);
+                }
+            });
+            // Agregar la nueva materia
             materiasSeleccionadas.set(materiaId, index);
             limpiarError(errorDiv);
             return true;
@@ -308,14 +355,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const clave = `${materiaId}-${docenteId}`;
 
         // Verificar combinación única (restricción de base de datos)
-        if (combinacionesMateriaDocente.has(clave) && combinacionesMateriaDocente.get(clave) !== index) {
-            mostrarError(errorDiv, 'Esta combinación de materia y docente ya existe en el grupo.');
+        let combinacionDuplicada = false;
+        let combinacionIndexExistente = null;
+
+        combinacionesMateriaDocente.forEach((existingIndex, existingClave) => {
+            if (existingClave === clave && existingIndex !== index) {
+                combinacionDuplicada = true;
+                combinacionIndexExistente = existingIndex;
+            }
+        });
+
+        if (combinacionDuplicada) {
+            mostrarError(errorDiv, `Esta combinación ya existe en la materia #${combinacionIndexExistente + 1}.`);
             return false;
         } else {
-            // Actualizar el mapa
-            if (combinacionesMateriaDocente.has(clave)) {
-                combinacionesMateriaDocente.delete(clave);
-            }
+            // Remover cualquier entrada previa para este índice
+            combinacionesMateriaDocente.forEach((value, key) => {
+                if (value === index) {
+                    combinacionesMateriaDocente.delete(key);
+                }
+            });
+            // Agregar la nueva combinación
             combinacionesMateriaDocente.set(clave, index);
             limpiarError(errorDiv);
             return true;
@@ -333,14 +393,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Verificar horario único por grupo (restricción de base de datos)
-        if (horariosSeleccionados.has(horarioId) && horariosSeleccionados.get(horarioId) !== index) {
-            mostrarError(errorDiv, 'Este horario ya está asignado a otra materia en el grupo.');
+        let horarioDuplicado = false;
+        let horarioIndexExistente = null;
+
+        horariosSeleccionados.forEach((existingIndex, existingHorarioId) => {
+            if (existingHorarioId === horarioId && existingIndex !== index) {
+                horarioDuplicado = true;
+                horarioIndexExistente = existingIndex;
+            }
+        });
+
+        if (horarioDuplicado) {
+            mostrarError(errorDiv, `Este horario ya está asignado a la materia #${horarioIndexExistente + 1}.`);
             return false;
         } else {
-            // Actualizar el mapa
-            if (horariosSeleccionados.has(horarioId)) {
-                horariosSeleccionados.delete(horarioId);
-            }
+            // Remover cualquier entrada previa para este índice
+            horariosSeleccionados.forEach((value, key) => {
+                if (value === index) {
+                    horariosSeleccionados.delete(key);
+                }
+            });
+            // Agregar el nuevo horario
             horariosSeleccionados.set(horarioId, index);
             limpiarError(errorDiv);
             return true;
@@ -410,47 +483,121 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function actualizarNumerosMaterias() {
-        document.querySelectorAll('.materia-item').forEach((item, index) => {
+        const materiasItems = document.querySelectorAll('.materia-item');
+        
+        materiasItems.forEach((item, index) => {
             item.querySelector('.materia-number').textContent = index + 1;
+            const oldIndex = item.getAttribute('data-materia-index');
             item.setAttribute('data-materia-index', index);
             
             // Actualizar índices en los names
             const inputs = item.querySelectorAll('select');
             inputs.forEach(input => {
-                const name = input.getAttribute('name').replace(/\[\d+\]/, `[${index}]`);
-                input.setAttribute('name', name);
+                const currentName = input.getAttribute('name');
+                const newName = currentName.replace(/materias\[\d+\]/, `materias[${index}]`);
+                input.setAttribute('name', newName);
                 input.setAttribute('data-index', index);
             });
+            
+            // Actualizar índices en los mapas
+            actualizarIndicesEnMapas(parseInt(oldIndex), index);
+        });
+    }
+
+    function actualizarIndicesEnMapas(oldIndex, newIndex) {
+        // Actualizar materiasSeleccionadas
+        const nuevasMaterias = new Map();
+        materiasSeleccionadas.forEach((index, materiaId) => {
+            if (index === oldIndex) {
+                nuevasMaterias.set(materiaId, newIndex);
+            } else {
+                nuevasMaterias.set(materiaId, index);
+            }
+        });
+        materiasSeleccionadas.clear();
+        nuevasMaterias.forEach((index, materiaId) => {
+            materiasSeleccionadas.set(materiaId, index);
+        });
+        
+        // Actualizar combinacionesMateriaDocente
+        const nuevasCombinaciones = new Map();
+        combinacionesMateriaDocente.forEach((index, combinacion) => {
+            if (index === oldIndex) {
+                nuevasCombinaciones.set(combinacion, newIndex);
+            } else {
+                nuevasCombinaciones.set(combinacion, index);
+            }
+        });
+        combinacionesMateriaDocente.clear();
+        nuevasCombinaciones.forEach((index, combinacion) => {
+            combinacionesMateriaDocente.set(combinacion, index);
+        });
+        
+        // Actualizar horariosSeleccionados
+        const nuevosHorarios = new Map();
+        horariosSeleccionados.forEach((index, horarioId) => {
+            if (index === oldIndex) {
+                nuevosHorarios.set(horarioId, newIndex);
+            } else {
+                nuevosHorarios.set(horarioId, index);
+            }
+        });
+        horariosSeleccionados.clear();
+        nuevosHorarios.forEach((index, horarioId) => {
+            horariosSeleccionados.set(horarioId, index);
         });
     }
 
     function actualizarEstadoBotonEnviar() {
         const hayMaterias = materiaCount > 0;
         const cuposValidos = validarCupos();
-        const materiasValidas = validarTodasLasMaterias();
+        
+        // Solo validar materias si hay al menos una
+        const materiasValidas = hayMaterias ? validarTodasLasMaterias() : false;
         
         submitBtn.disabled = !(hayMaterias && cuposValidos && materiasValidas);
     }
 
     function validarTodasLasMaterias() {
         let todasValidas = true;
+        let hayMateriasConDatos = false;
         
         document.querySelectorAll('.materia-item').forEach(item => {
             const index = item.getAttribute('data-materia-index');
             
-            const materiaValida = validarMateriaUnica(item, index);
-            const combinacionValida = validarCombinacionMateriaDocente(item, index);
-            const horarioValido = validarHorarioUnico(item, index);
-            const aulaValida = validarCapacidadAula(item, index);
-            
             // Validar que todos los campos estén llenos
             const selects = item.querySelectorAll('select');
-            const camposLlenos = Array.from(selects).every(select => select.value !== '');
+            const camposLlenos = Array.from(selects).every(select => {
+                return select.value !== '';
+            });
             
-            if (!(materiaValida && combinacionValida && horarioValido && aulaValida && camposLlenos)) {
-                todasValidas = false;
+            if (camposLlenos) {
+                hayMateriasConDatos = true;
+                
+                const materiaValida = validarMateriaUnica(item, index);
+                const combinacionValida = validarCombinacionMateriaDocente(item, index);
+                const horarioValido = validarHorarioUnico(item, index);
+                const aulaValida = validarCapacidadAula(item, index);
+                
+                if (!(materiaValida && combinacionValida && horarioValido && aulaValida)) {
+                    todasValidas = false;
+                }
+            } else {
+                // Si hay campos vacíos pero es la única materia, marcar error
+                if (document.querySelectorAll('.materia-item').length === 1) {
+                    todasValidas = false;
+                }
             }
         });
+        
+        // Mostrar/ocultar mensaje general de error
+        const materiasError = document.getElementById('materias-error');
+        if (!hayMateriasConDatos && document.querySelectorAll('.materia-item').length > 0) {
+            mostrarError(materiasError, 'Debe completar todos los campos de al menos una materia');
+            return false;
+        } else {
+            limpiarError(materiasError);
+        }
         
         return todasValidas;
     }
@@ -510,6 +657,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializar contador de descripción
     actualizarContadorDescripcion();
+    
+    // Validación inicial
+    setTimeout(() => {
+        actualizarEstadoBotonEnviar();
+    }, 100);
 });
 </script>
 @endsection
