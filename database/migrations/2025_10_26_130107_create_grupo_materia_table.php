@@ -17,9 +17,7 @@ return new class extends Migration
             $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
             $table->timestamps();
 
-            // Constraints únicos (lógica de negocio)
-            $table->unique(['grupo_id', 'materia_id', 'docente_id']);
-            $table->unique(['grupo_id', 'horario_id']);
+          
         });
     }
 
