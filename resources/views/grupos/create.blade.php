@@ -76,7 +76,7 @@
                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition duration-200">
                     Cancelar
                 </a>
-                <button type="submit" 
+                <button type="submit" id="submitBtn"
                         class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200">
                     Crear Grupo
                 </button>
@@ -105,6 +105,7 @@
                         <option value="{{ $materia->sigla_materia }}">{{ $materia->sigla_materia }} - {{ $materia->nombre_materia }}</option>
                     @endforeach
                 </select>
+                <div class="error-materia mt-1 text-sm text-red-600 hidden"></div>
             </div>
 
             <!-- Docente -->
@@ -116,6 +117,7 @@
                         <option value="{{ $docente->id }}">{{ $docente->user->nombre }} ({{ $docente->codigo_docente }})</option>
                     @endforeach
                 </select>
+                <div class="error-docente mt-1 text-sm text-red-600 hidden"></div>
             </div>
 
             <!-- Aula -->
@@ -127,6 +129,7 @@
                         <option value="{{ $aula->id }}">{{ $aula->nro_aula }} - {{ $aula->tipo }}</option>
                     @endforeach
                 </select>
+                <div class="error-aula mt-1 text-sm text-red-600 hidden"></div>
             </div>
 
             <!-- Horario -->
@@ -138,6 +141,7 @@
                         <option value="{{ $horario->id }}">{{ $horario->dias_semana }} - {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }}/{{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}</option>
                     @endforeach
                 </select>
+                <div class="error-horario mt-1 text-sm text-red-600 hidden"></div>
             </div>
         </div>
     </div>
@@ -149,7 +153,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const materiasContainer = document.getElementById('materias-container');
     const materiaTemplate = document.getElementById('materia-template');
     const agregarMateriaBtn = document.getElementById('agregarMateria');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Estructuras para rastrear conflictos
     const horariosSeleccionados = new Set();
+    const materiasEnGrupo = new Set();
+    const docenteHorarios = new Map(); // docente_id -> Set(horario_id)
+    const aulaHorarios = new Map();    // aula_id -> Set(horario_id)
 
     // Agregar primera materia por defecto
     agregarMateria();
@@ -159,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function agregarMateria() {
         const materiaClone = materiaTemplate.content.cloneNode(true);
         const materiaItem = materiaClone.querySelector('.materia-item');
-        const horarioSelect = materiaItem.querySelector('.horario-select');
         
         // Actualizar números y nombres
         const inputs = materiaItem.querySelectorAll('select');
@@ -171,21 +180,38 @@ document.addEventListener('DOMContentLoaded', function() {
         // Actualizar número de materia
         materiaItem.querySelector('.materia-number').textContent = materiaCount + 1;
 
-        // Validar horario al cambiar
+        // Agregar event listeners para validaciones
+        const materiaSelect = materiaItem.querySelector('.materia-select');
+        const docenteSelect = materiaItem.querySelector('.docente-select');
+        const aulaSelect = materiaItem.querySelector('.aula-select');
+        const horarioSelect = materiaItem.querySelector('.horario-select');
+
+        materiaSelect.addEventListener('change', function() {
+            validarMateriaUnica(this);
+            validarConflictoCompleto(materiaItem);
+        });
+
+        docenteSelect.addEventListener('change', function() {
+            validarConflictoCompleto(materiaItem);
+        });
+
+        aulaSelect.addEventListener('change', function() {
+            validarConflictoCompleto(materiaItem);
+        });
+
         horarioSelect.addEventListener('change', function() {
             validarHorarioUnico(this);
+            validarConflictoCompleto(materiaItem);
         });
 
         // Agregar funcionalidad de remover
         materiaItem.querySelector('.remover-materia').addEventListener('click', function() {
             if (document.querySelectorAll('.materia-item').length > 1) {
-                // Remover horario del conjunto
-                const horarioId = materiaItem.querySelector('.horario-select').value;
-                if (horarioId) {
-                    horariosSeleccionados.delete(horarioId);
-                }
+                // Limpiar registros al remover
+                limpiarRegistrosMateria(materiaItem);
                 materiaItem.remove();
                 actualizarNumeros();
+                validarTodoElFormulario();
             } else {
                 alert('El grupo debe tener al menos una materia.');
             }
@@ -195,52 +221,204 @@ document.addEventListener('DOMContentLoaded', function() {
         materiaCount++;
     }
 
-    function validarHorarioUnico(selectElement) {
-        const horarioId = selectElement.value;
-        const materiaItem = selectElement.closest('.materia-item');
+    function limpiarRegistrosMateria(materiaItem) {
+        const materiaId = materiaItem.querySelector('.materia-select').value;
+        const horarioId = materiaItem.querySelector('.horario-select').value;
+        const docenteId = materiaItem.querySelector('.docente-select').value;
+        const aulaId = materiaItem.querySelector('.aula-select').value;
+
+        if (materiaId) materiasEnGrupo.delete(materiaId);
+        if (horarioId) horariosSeleccionados.delete(horarioId);
         
-        if (horarioId) {
-            if (horariosSeleccionados.has(horarioId)) {
-                // Horario duplicado encontrado
-                selectElement.style.borderColor = 'red';
-                mostrarError(selectElement, 'Este horario ya está asignado a otra materia en este grupo.');
-                
-                // Deshabilitar el botón de enviar
-                document.querySelector('button[type="submit"]').disabled = true;
-            } else {
-                // Horario válido
-                selectElement.style.borderColor = '';
-                removerError(selectElement);
-                
-                // Actualizar conjunto
-                const oldHorario = materiaItem.dataset.horarioId;
-                if (oldHorario) {
-                    horariosSeleccionados.delete(oldHorario);
-                }
-                horariosSeleccionados.add(horarioId);
-                materiaItem.dataset.horarioId = horarioId;
-                
-                // Habilitar el botón de enviar si no hay errores
-                document.querySelector('button[type="submit"]').disabled = false;
+        if (docenteId && horarioId) {
+            if (docenteHorarios.has(docenteId)) {
+                docenteHorarios.get(docenteId).delete(horarioId);
+            }
+        }
+        
+        if (aulaId && horarioId) {
+            if (aulaHorarios.has(aulaId)) {
+                aulaHorarios.get(aulaId).delete(horarioId);
             }
         }
     }
 
-    function mostrarError(elemento, mensaje) {
-        // Remover error anterior si existe
-        removerError(elemento);
+    function validarMateriaUnica(selectElement) {
+        const materiaId = selectElement.value;
+        const errorDiv = selectElement.parentNode.querySelector('.error-materia');
         
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'mt-1 text-sm text-red-600 error-message';
-        errorDiv.textContent = mensaje;
-        elemento.parentNode.appendChild(errorDiv);
+        if (materiaId) {
+            if (materiasEnGrupo.has(materiaId)) {
+                mostrarError(errorDiv, 'Esta materia ya está asignada en este grupo.');
+                selectElement.style.borderColor = 'red';
+                return false;
+            } else {
+                // Remover materia anterior si existe
+                const materiaItem = selectElement.closest('.materia-item');
+                const oldMateriaId = materiaItem.dataset.materiaId;
+                if (oldMateriaId) {
+                    materiasEnGrupo.delete(oldMateriaId);
+                }
+                
+                materiasEnGrupo.add(materiaId);
+                materiaItem.dataset.materiaId = materiaId;
+                ocultarError(errorDiv);
+                selectElement.style.borderColor = '';
+                return true;
+            }
+        }
+        ocultarError(errorDiv);
+        return true;
     }
 
-    function removerError(elemento) {
-        const errorExistente = elemento.parentNode.querySelector('.error-message');
-        if (errorExistente) {
-            errorExistente.remove();
+    function validarHorarioUnico(selectElement) {
+        const horarioId = selectElement.value;
+        const errorDiv = selectElement.parentNode.querySelector('.error-horario');
+        
+        if (horarioId) {
+            if (horariosSeleccionados.has(horarioId)) {
+                mostrarError(errorDiv, 'Este horario ya está asignado a otra materia en este grupo.');
+                selectElement.style.borderColor = 'red';
+                return false;
+            } else {
+                // Remover horario anterior si existe
+                const materiaItem = selectElement.closest('.materia-item');
+                const oldHorarioId = materiaItem.dataset.horarioId;
+                if (oldHorarioId) {
+                    horariosSeleccionados.delete(oldHorarioId);
+                }
+                
+                horariosSeleccionados.add(horarioId);
+                materiaItem.dataset.horarioId = horarioId;
+                ocultarError(errorDiv);
+                selectElement.style.borderColor = '';
+                return true;
+            }
         }
+        ocultarError(errorDiv);
+        return true;
+    }
+
+    function validarConflictoCompleto(materiaItem) {
+        const docenteId = materiaItem.querySelector('.docente-select').value;
+        const aulaId = materiaItem.querySelector('.aula-select').value;
+        const horarioId = materiaItem.querySelector('.horario-select').value;
+        
+        let tieneConflictos = false;
+
+        // Validar docente en misma hora
+        if (docenteId && horarioId) {
+            const errorDocente = materiaItem.querySelector('.error-docente');
+            if (docenteHorarios.has(docenteId) && docenteHorarios.get(docenteId).has(horarioId)) {
+                mostrarError(errorDocente, 'Este docente ya está asignado en otro aula a esta misma hora.');
+                materiaItem.querySelector('.docente-select').style.borderColor = 'red';
+                tieneConflictos = true;
+            } else {
+                ocultarError(errorDocente);
+                materiaItem.querySelector('.docente-select').style.borderColor = '';
+            }
+        }
+
+        // Validar aula en misma hora
+        if (aulaId && horarioId) {
+            const errorAula = materiaItem.querySelector('.error-aula');
+            if (aulaHorarios.has(aulaId) && aulaHorarios.get(aulaId).has(horarioId)) {
+                mostrarError(errorAula, 'Esta aula ya está ocupada por otro docente a esta misma hora.');
+                materiaItem.querySelector('.aula-select').style.borderColor = 'red';
+                tieneConflictos = true;
+            } else {
+                ocultarError(errorAula);
+                materiaItem.querySelector('.aula-select').style.borderColor = '';
+            }
+        }
+
+        return !tieneConflictos;
+    }
+
+    function actualizarRegistrosGlobales(materiaItem) {
+        const docenteId = materiaItem.querySelector('.docente-select').value;
+        const aulaId = materiaItem.querySelector('.aula-select').value;
+        const horarioId = materiaItem.querySelector('.horario-select').value;
+
+        // Limpiar registros anteriores
+        const oldDocenteId = materiaItem.dataset.docenteId;
+        const oldAulaId = materiaItem.dataset.aulaId;
+        const oldHorarioId = materiaItem.dataset.horarioId;
+
+        if (oldDocenteId && oldHorarioId) {
+            if (docenteHorarios.has(oldDocenteId)) {
+                docenteHorarios.get(oldDocenteId).delete(oldHorarioId);
+            }
+        }
+
+        if (oldAulaId && oldHorarioId) {
+            if (aulaHorarios.has(oldAulaId)) {
+                aulaHorarios.get(oldAulaId).delete(oldHorarioId);
+            }
+        }
+
+        // Actualizar con nuevos valores
+        if (docenteId && horarioId) {
+            if (!docenteHorarios.has(docenteId)) {
+                docenteHorarios.set(docenteId, new Set());
+            }
+            docenteHorarios.get(docenteId).add(horarioId);
+            materiaItem.dataset.docenteId = docenteId;
+        }
+
+        if (aulaId && horarioId) {
+            if (!aulaHorarios.has(aulaId)) {
+                aulaHorarios.set(aulaId, new Set());
+            }
+            aulaHorarios.get(aulaId).add(horarioId);
+            materiaItem.dataset.aulaId = aulaId;
+        }
+
+        if (horarioId) {
+            materiaItem.dataset.horarioId = horarioId;
+        }
+    }
+
+    function validarTodoElFormulario() {
+        let formularioValido = true;
+        const materiaItems = document.querySelectorAll('.materia-item');
+
+        // Reset global maps
+        docenteHorarios.clear();
+        aulaHorarios.clear();
+        horariosSeleccionados.clear();
+        materiasEnGrupo.clear();
+
+        materiaItems.forEach((item, index) => {
+            // Validar materia única
+            const materiaSelect = item.querySelector('.materia-select');
+            if (!validarMateriaUnica(materiaSelect)) formularioValido = false;
+
+            // Validar horario único
+            const horarioSelect = item.querySelector('.horario-select');
+            if (!validarHorarioUnico(horarioSelect)) formularioValido = false;
+
+            // Actualizar registros globales para próximas validaciones
+            actualizarRegistrosGlobales(item);
+        });
+
+        // Segunda pasada para validar conflictos cruzados
+        materiaItems.forEach(item => {
+            if (!validarConflictoCompleto(item)) formularioValido = false;
+        });
+
+        submitBtn.disabled = !formularioValido;
+        return formularioValido;
+    }
+
+    function mostrarError(errorDiv, mensaje) {
+        errorDiv.textContent = mensaje;
+        errorDiv.classList.remove('hidden');
+    }
+
+    function ocultarError(errorDiv) {
+        errorDiv.textContent = '';
+        errorDiv.classList.add('hidden');
     }
 
     function actualizarNumeros() {
@@ -250,28 +428,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Validar formulario antes de enviar
-    document.getElementById('grupoForm').addEventListener('submit', function(e) {
-        const horariosUnicos = new Set();
-        let hayDuplicados = false;
-        
-        document.querySelectorAll('.horario-select').forEach(select => {
-            if (select.value) {
-                if (horariosUnicos.has(select.value)) {
-                    hayDuplicados = true;
-                    select.style.borderColor = 'red';
-                    mostrarError(select, 'Horario duplicado detectado.');
-                } else {
-                    horariosUnicos.add(select.value);
-                }
+    // Validar en tiempo real
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('materia-select') || 
+            e.target.classList.contains('docente-select') || 
+            e.target.classList.contains('aula-select') || 
+            e.target.classList.contains('horario-select')) {
+            
+            const materiaItem = e.target.closest('.materia-item');
+            if (materiaItem) {
+                actualizarRegistrosGlobales(materiaItem);
+                validarTodoElFormulario();
             }
-        });
-        
-        if (hayDuplicados) {
-            e.preventDefault();
-            alert('Error: No puedes asignar el mismo horario a múltiples materias en el mismo grupo.');
         }
     });
+
+    // Validar formulario antes de enviar
+    document.getElementById('grupoForm').addEventListener('submit', function(e) {
+        if (!validarTodoElFormulario()) {
+            e.preventDefault();
+            alert('Por favor, corrige los conflictos en el horario antes de enviar el formulario.');
+        }
+    });
+
+    // Validación inicial
+    validarTodoElFormulario();
 });
 </script>
 @endsection
