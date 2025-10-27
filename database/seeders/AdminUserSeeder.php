@@ -31,8 +31,8 @@ class AdminUserSeeder extends Seeder
             ]);
 
             $this->command->info('Usuario administrador creado exitosamente!');
-            $this->command->info('Correo: admin@ficct.edu.bo');
-            $this->command->info('Password: admin123');
+            $this->command->info('Correo: alan@gmail.com');
+            $this->command->info('Password: 12345678');
         } else {
             $this->command->info('El usuario administrador ya existe.');
         }
