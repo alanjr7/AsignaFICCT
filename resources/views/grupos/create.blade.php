@@ -174,20 +174,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submit-btn');
     
     // Conjuntos para controlar restricciones únicas
-    const horariosSeleccionados = new Map(); // horario_id -> materia_index
-    const combinacionesMateriaDocente = new Map(); // "materia_id-docente_id" -> materia_index
-    const materiasSeleccionadas = new Map(); // materia_id -> materia_index
+    const horariosSeleccionados = new Map();
+    const combinacionesMateriaDocente = new Map();
+    const materiasSeleccionadas = new Map();
 
     // Agregar primera materia por defecto
     agregarMateria();
 
     // Event Listeners para validaciones básicas
-    document.getElementById('cupo_minimo').addEventListener('input', validarCupos);
-    document.getElementById('cupo_maximo').addEventListener('input', validarCupos);
+    document.getElementById('cupo_minimo').addEventListener('input', function() {
+        validarCupos();
+        actualizarEstadoBotonEnviar();
+    });
+    document.getElementById('cupo_maximo').addEventListener('input', function() {
+        validarCupos();
+        actualizarEstadoBotonEnviar();
+    });
     document.getElementById('descripcion').addEventListener('input', actualizarContadorDescripcion);
 
     agregarMateriaBtn.addEventListener('click', function() {
-        if (materiaCount < 10) { // Límite razonable de materias por grupo
+        if (materiaCount < 10) {
             agregarMateria();
         } else {
             alert('Máximo 10 materias por grupo permitidas.');
@@ -226,23 +232,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const removerBtn = materiaItem.querySelector('.remover-materia');
 
         // Event listeners para cambios
-        materiaSelect.addEventListener('change', () => {
+        materiaSelect.addEventListener('change', function() {
             validarMateriaUnica(materiaItem, index);
             validarCombinacionMateriaDocente(materiaItem, index);
             actualizarEstadoBotonEnviar();
         });
         
-        docenteSelect.addEventListener('change', () => {
+        docenteSelect.addEventListener('change', function() {
             validarCombinacionMateriaDocente(materiaItem, index);
             actualizarEstadoBotonEnviar();
         });
         
-        aulaSelect.addEventListener('change', () => {
+        aulaSelect.addEventListener('change', function() {
             validarCapacidadAula(materiaItem, index);
             actualizarEstadoBotonEnviar();
         });
         
-        horarioSelect.addEventListener('change', () => {
+        horarioSelect.addEventListener('change', function() {
             validarHorarioUnico(materiaItem, index);
             actualizarEstadoBotonEnviar();
         });
@@ -256,12 +262,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Validar en tiempo real
-        ['change', 'blur'].forEach(event => {
-            materiaSelect.addEventListener(event, () => validarCampo(materiaSelect));
-            docenteSelect.addEventListener(event, () => validarCampo(docenteSelect));
-            aulaSelect.addEventListener(event, () => validarCampo(aulaSelect));
-            horarioSelect.addEventListener(event, () => validarCampo(horarioSelect));
+        // Validar campos individuales
+        [materiaSelect, docenteSelect, aulaSelect, horarioSelect].forEach(select => {
+            select.addEventListener('change', function() {
+                validarCampo(this);
+                actualizarEstadoBotonEnviar();
+            });
         });
     }
 
@@ -303,7 +309,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!materiaId) {
             limpiarError(errorDiv);
-            // Remover del mapa si estaba presente
             materiasSeleccionadas.forEach((value, key) => {
                 if (value === index) {
                     materiasSeleccionadas.delete(key);
@@ -312,7 +317,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return true;
         }
 
-        // Verificar si la materia ya está en otra posición
         let materiaDuplicada = false;
         let materiaIndexExistente = null;
 
@@ -327,13 +331,11 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarError(errorDiv, `Esta materia ya está asignada a la materia #${materiaIndexExistente + 1}.`);
             return false;
         } else {
-            // Remover cualquier entrada previa para este índice
             materiasSeleccionadas.forEach((value, key) => {
                 if (value === index) {
                     materiasSeleccionadas.delete(key);
                 }
             });
-            // Agregar la nueva materia
             materiasSeleccionadas.set(materiaId, index);
             limpiarError(errorDiv);
             return true;
@@ -353,8 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const clave = `${materiaId}-${docenteId}`;
-
-        // Verificar combinación única (restricción de base de datos)
         let combinacionDuplicada = false;
         let combinacionIndexExistente = null;
 
@@ -369,13 +369,11 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarError(errorDiv, `Esta combinación ya existe en la materia #${combinacionIndexExistente + 1}.`);
             return false;
         } else {
-            // Remover cualquier entrada previa para este índice
             combinacionesMateriaDocente.forEach((value, key) => {
                 if (value === index) {
                     combinacionesMateriaDocente.delete(key);
                 }
             });
-            // Agregar la nueva combinación
             combinacionesMateriaDocente.set(clave, index);
             limpiarError(errorDiv);
             return true;
@@ -392,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return true;
         }
 
-        // Verificar horario único por grupo (restricción de base de datos)
         let horarioDuplicado = false;
         let horarioIndexExistente = null;
 
@@ -407,13 +404,11 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarError(errorDiv, `Este horario ya está asignado a la materia #${horarioIndexExistente + 1}.`);
             return false;
         } else {
-            // Remover cualquier entrada previa para este índice
             horariosSeleccionados.forEach((value, key) => {
                 if (value === index) {
                     horariosSeleccionados.delete(key);
                 }
             });
-            // Agregar el nuevo horario
             horariosSeleccionados.set(horarioId, index);
             limpiarError(errorDiv);
             return true;
@@ -431,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return true;
         }
 
-        const capacidad = parseInt(aulaSelect.selectedOptions[0].getAttribute('data-capacidad')) || 0;
+        const capacidad = parseInt(aulaSelect.selectedOptions[0]?.getAttribute('data-capacidad')) || 0;
 
         if (capacidad > 0 && cupoMaximo > capacidad) {
             mostrarError(errorDiv, `El cupo máximo (${cupoMaximo}) supera la capacidad del aula (${capacidad}).`);
@@ -453,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             limpiarError(errorDiv);
             
-            // Revalidar capacidades de aulas si hay cambio en cupo máximo
             document.querySelectorAll('.materia-item').forEach(item => {
                 const index = item.getAttribute('data-materia-index');
                 validarCapacidadAula(item, index);
@@ -465,7 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validarCampo(campo) {
         const value = campo.value.trim();
-        const parent = campo.closest('.materia-item');
         
         if (!value) {
             campo.style.borderColor = '#f56565';
@@ -490,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const oldIndex = item.getAttribute('data-materia-index');
             item.setAttribute('data-materia-index', index);
             
-            // Actualizar índices en los names
             const inputs = item.querySelectorAll('select');
             inputs.forEach(input => {
                 const currentName = input.getAttribute('name');
@@ -499,7 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.setAttribute('data-index', index);
             });
             
-            // Actualizar índices en los mapas
             actualizarIndicesEnMapas(parseInt(oldIndex), index);
         });
     }
@@ -549,20 +540,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function actualizarEstadoBotonEnviar() {
-        const hayMaterias = materiaCount > 0;
+        console.log('Actualizando estado del botón...');
+        
         const cuposValidos = validarCupos();
+        const materiasValidas = validarTodasLasMaterias();
         
-        // Solo validar materias si hay al menos una
-        const materiasValidas = hayMaterias ? validarTodasLasMaterias() : false;
+        console.log('Cupos válidos:', cuposValidos);
+        console.log('Materias válidas:', materiasValidas);
+        console.log('Total materias:', materiaCount);
         
-        submitBtn.disabled = !(hayMaterias && cuposValidos && materiasValidas);
+        const habilitar = cuposValidos && materiasValidas && materiaCount > 0;
+        
+        console.log('Habilitar botón:', habilitar);
+        
+        submitBtn.disabled = !habilitar;
     }
 
     function validarTodasLasMaterias() {
-        let todasValidas = true;
-        let hayMateriasConDatos = false;
+        const materiasItems = document.querySelectorAll('.materia-item');
         
-        document.querySelectorAll('.materia-item').forEach(item => {
+        if (materiasItems.length === 0) {
+            console.log('No hay materias items');
+            return false;
+        }
+
+        let todasValidas = true;
+        let alMenosUnaCompleta = false;
+
+        materiasItems.forEach(item => {
             const index = item.getAttribute('data-materia-index');
             
             // Validar que todos los campos estén llenos
@@ -571,35 +576,44 @@ document.addEventListener('DOMContentLoaded', function() {
                 return select.value !== '';
             });
             
+            console.log(`Materia ${index}: campos llenos:`, camposLlenos);
+            
             if (camposLlenos) {
-                hayMateriasConDatos = true;
+                alMenosUnaCompleta = true;
                 
                 const materiaValida = validarMateriaUnica(item, index);
                 const combinacionValida = validarCombinacionMateriaDocente(item, index);
                 const horarioValido = validarHorarioUnico(item, index);
                 const aulaValida = validarCapacidadAula(item, index);
                 
+                console.log(`Materia ${index} validaciones:`, {
+                    materiaValida,
+                    combinacionValida,
+                    horarioValido,
+                    aulaValida
+                });
+                
                 if (!(materiaValida && combinacionValida && horarioValido && aulaValida)) {
                     todasValidas = false;
                 }
             } else {
-                // Si hay campos vacíos pero es la única materia, marcar error
-                if (document.querySelectorAll('.materia-item').length === 1) {
-                    todasValidas = false;
-                }
+                // Si no está completa, no es válida
+                todasValidas = false;
             }
         });
-        
+
+        console.log('Al menos una materia completa:', alMenosUnaCompleta);
+        console.log('Todas las materias válidas:', todasValidas);
+
         // Mostrar/ocultar mensaje general de error
         const materiasError = document.getElementById('materias-error');
-        if (!hayMateriasConDatos && document.querySelectorAll('.materia-item').length > 0) {
+        if (!alMenosUnaCompleta) {
             mostrarError(materiasError, 'Debe completar todos los campos de al menos una materia');
-            return false;
         } else {
             limpiarError(materiasError);
         }
         
-        return todasValidas;
+        return todasValidas && alMenosUnaCompleta;
     }
 
     function mostrarError(elemento, mensaje) {
@@ -620,7 +634,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Validación adicional de combinaciones únicas
         const combinaciones = new Set();
         const horarios = new Set();
         let hayDuplicados = false;
