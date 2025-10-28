@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             MateriaSeeder::class,
             DocenteSeeder::class,
             GrupoSeeder::class,
-            GrupoMateriaSeeder::class,
+            
         ]);
     }
 }
