@@ -2,35 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Horario;
 use App\Models\GrupoMateria;
+use App\Models\Aula;
+use App\Models\Bitacora;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class HorarioController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // Obtener el docente autenticado
-        $docente = auth()->user()->docente;
+        $docenteId = auth()->id();
         
-        if (!$docente) {
-            return redirect()->route('dashboard')->with('error', 'No se encontró información de docente.');
-        }
+        $materiasAsignadas = GrupoMateria::with(['grupo', 'materia', 'horarios.aula'])
+            ->where('docente_id', $docenteId)
+            ->get();
 
-        // Obtener todas las materias asignadas al docente con sus grupos, aulas y horarios
-        $materiasAsignadas = GrupoMateria::with(['grupo', 'materia', 'aula', 'horario'])
-            ->where('docente_id', $docente->id)
-            ->get()
-            ->groupBy('horario.dias_semana'); // Agrupar por día de la semana
-
-        // Días de la semana ordenados
-        $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        
-        // Horarios disponibles
-        $horarios = \App\Models\Horario::all()->groupBy('dias_semana');
-
-        return view('horario.index', compact('materiasAsignadas', 'diasSemana', 'horarios'));
+        return view('horario.index', compact('materiasAsignadas'));
     }
 }

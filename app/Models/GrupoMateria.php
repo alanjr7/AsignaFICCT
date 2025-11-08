@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class GrupoMateria extends Model
 {
@@ -15,37 +16,58 @@ class GrupoMateria extends Model
         'grupo_id',
         'materia_id',
         'docente_id',
-        'aula_id',
-        'horario_id',
+        'horas_asignadas',
     ];
 
-    // Relación con Grupo
     public function grupo()
     {
-        return $this->belongsTo(Grupo::class, 'grupo_id', 'sigla_grupo');
+        return $this->belongsTo(Grupo::class);
     }
 
-    // Relación con Materia
     public function materia()
     {
-        return $this->belongsTo(Materia::class, 'materia_id', 'sigla_materia');
+        return $this->belongsTo(Materia::class);
     }
 
-    // Relación con Docente
     public function docente()
     {
-        return $this->belongsTo(Docente::class);
+        return $this->belongsTo(User::class, 'docente_id');
     }
 
-    // Relación con Aula
-    public function aula()
+    public function horarios()
     {
-        return $this->belongsTo(Aula::class);
+        return $this->hasMany(Horario::class);
     }
 
-    // Relación con Horario
-    public function horario()
+    /**
+     * Calcular horas asignadas (suma de todos los horarios)
+     */
+    public function horasAsignadas()
     {
-        return $this->belongsTo(Horario::class);
+        $total = 0;
+        foreach ($this->horarios as $horario) {
+            $inicio = Carbon::parse($horario->hora_inicio);
+            $fin = Carbon::parse($horario->hora_fin);
+            $total += $fin->diffInHours($inicio, true);
+        }
+        return round($total, 1);
+    }
+
+    /**
+     * Calcular horas pendientes
+     */
+    public function horasPendientes()
+    {
+        $asignadas = $this->horasAsignadas();
+        $pendientes = $this->horas_asignadas - $asignadas;
+        return max(0, $pendientes);
+    }
+
+    /**
+     * Verificar si tiene horas disponibles
+     */
+    public function tieneHorasDisponibles()
+    {
+        return $this->horasPendientes() > 0;
     }
 }

@@ -28,8 +28,8 @@
                 <a href="{{ route('materias.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
                     <span class="font-medium">Gestión de Materias</span>
                 </a>
-                <a href="{{ route('grupos.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
-                    <span class="font-medium">Gestión de Grupos</span>
+                <a href="{{ route('grupos.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
+                    Gestión de Grupos
                 </a>
                 <a href="{{ route('aulas.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
                     <span class="font-medium">Gestión de Aulas</span>

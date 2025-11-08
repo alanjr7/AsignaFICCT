@@ -9,10 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('grupos', function (Blueprint $table) {
-            $table->string('sigla_grupo')->primary(); // Clave primaria
-            $table->integer('cupo_maximo');
-            $table->integer('cupo_minimo');
-            $table->text('descripcion')->nullable();
+            $table->id();
+            $table->string('codigo_grupo')->unique();
+            $table->string('sigla_grupo');
+            $table->string('nombre_grupo');
+            $table->integer('cupo_maximo')->default(40);
+            $table->integer('cupo_minimo')->default(10);
+            $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->timestamps();
         });
     }

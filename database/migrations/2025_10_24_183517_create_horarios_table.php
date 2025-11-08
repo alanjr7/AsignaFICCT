@@ -10,10 +10,18 @@ return new class extends Migration
     {
         Schema::create('horarios', function (Blueprint $table) {
             $table->id();
-            $table->string('dias_semana'); // Ej: "Lunes,Martiernes"
+            $table->foreignId('grupo_materia_id')->constrained('grupo_materia')->onDelete('cascade');
+            $table->foreignId('aula_id')->constrained()->onDelete('cascade');
+            $table->enum('dia', ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']);
             $table->time('hora_inicio');
             $table->time('hora_fin');
             $table->timestamps();
+
+            // Evitar conflictos de aula en mismo horario
+            $table->unique(['aula_id', 'dia', 'hora_inicio']);
+            
+            // Evitar que mismo docente tenga dos clases al mismo tiempo
+            $table->unique(['grupo_materia_id', 'dia', 'hora_inicio']);
         });
     }
 

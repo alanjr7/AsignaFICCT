@@ -1,208 +1,207 @@
 @extends('layouts.app')
 
-@section('title', 'Mi Horario')
+@section('title', 'Mis Horarios')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+<div class="container mx-auto px-4 py-6">
     <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">Mi Horario Semanal</h2>
-        <p class="text-gray-600">Bienvenido, {{ auth()->user()->nombre }}</p>
+        <h1 class="text-3xl font-bold text-gray-800">Mis Horarios</h1>
+        <p class="text-gray-600">Gestione los horarios de sus materias asignadas</p>
     </div>
 
-    <!-- Información del docente -->
-    <div class="bg-white shadow rounded-lg mb-6">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Información del Docente</h3>
-        </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    @if($materiasAsignadas->count() > 0)
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        @foreach($materiasAsignadas as $materiaAsignada)
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 
+            {{ $materiaAsignada->horasPendientes() <= 0 ? 'border-green-500' : 'border-blue-500' }}">
+            <div class="flex justify-between items-start mb-3">
                 <div>
-                    <p class="text-sm text-gray-600">Nombre:</p>
-                    <p class="font-medium">{{ auth()->user()->nombre }}</p>
+                    <h3 class="text-lg font-semibold text-gray-800">{{ $materiaAsignada->materia->sigla_materia }}</h3>
+                    <p class="text-gray-600 text-sm">{{ $materiaAsignada->materia->nombre_materia }}</p>
+                    <p class="text-gray-500 text-sm">Grupo: {{ $materiaAsignada->grupo->nombre_grupo }}</p>
                 </div>
-                <div>
-                    <p class="text-sm text-gray-600">Código:</p>
-                    <p class="font-medium">{{ auth()->user()->docente->codigo_docente ?? 'N/A' }}</p>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    {{ $materiaAsignada->horasPendientes() <= 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                    {{ $materiaAsignada->horasAsignadas() }}/{{ $materiaAsignada->horas_asignadas }}h
+                </span>
+            </div>
+            
+            <div class="mb-4">
+                <div class="text-sm text-gray-600 mb-2">
+                    <strong>Horas pendientes:</strong> {{ $materiaAsignada->horasPendientes() }} horas
                 </div>
-                <div>
-                    <p class="text-sm text-gray-600">Profesión:</p>
-                    <p class="font-medium">{{ auth()->user()->docente->profesion ?? 'N/A' }}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-600">Total Materias:</p>
-                    <p class="font-medium">{{ $materiasAsignadas->flatten()->count() }}</p>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    @php
+                        $porcentaje = $materiaAsignada->horas_asignadas > 0 ? 
+                                    ($materiaAsignada->horasAsignadas() / $materiaAsignada->horas_asignadas) * 100 : 0;
+                        $color = $porcentaje >= 100 ? 'bg-green-500' : ($porcentaje >= 80 ? 'bg-yellow-500' : 'bg-blue-500');
+                    @endphp
+                    <div class="h-2 rounded-full {{ $color }}" style="width: {{ min($porcentaje, 100) }}%"></div>
                 </div>
             </div>
+
+            <a href="{{ route('horario-docente.create', $materiaAsignada) }}" 
+               class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center justify-center transition duration-200
+                      {{ $materiaAsignada->horasPendientes() <= 0 ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' : '' }}"
+               {{ $materiaAsignada->horasPendientes() <= 0 ? 'disabled' : '' }}>
+                📅 Asignar Horarios
+            </a>
         </div>
+        @endforeach
     </div>
 
-    <!-- Horario semanal -->
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Horario Semanal</h3>
-            <p class="text-sm text-gray-600">Período: {{ now()->format('F Y') }}</p>
-        </div>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Mi Horario Semanal</h3>
         
-        <div class="p-6">
-            @if($materiasAsignadas->flatten()->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white border border-gray-200">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="py-3 px-4 border-b text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                                    Hora / Día
-                                </th>
-                                @foreach($diasSemana as $dia)
-                                <th class="py-3 px-4 border-b text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    {{ $dia }}
-                                </th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <!-- Generar filas para cada bloque horario -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Hora</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Lunes</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Martes</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Miércoles</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Jueves</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Viernes</th>
+                        <th class="border border-gray-300 px-4 py-2 bg-gray-100 font-medium text-gray-700">Sábado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $bloquesHorarios = [
+                            ['inicio' => '07:00', 'fin' => '08:30'],
+                            ['inicio' => '08:30', 'fin' => '10:00'],
+                            ['inicio' => '10:00', 'fin' => '11:30'],
+                            ['inicio' => '11:30', 'fin' => '13:00'],
+                            ['inicio' => '14:00', 'fin' => '15:30'],
+                            ['inicio' => '15:30', 'fin' => '17:00'],
+                            ['inicio' => '17:00', 'fin' => '18:30'],
+                            ['inicio' => '18:30', 'fin' => '20:00'],
+                        ];
+                        $dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                    @endphp
+                    
+                    @foreach($bloquesHorarios as $bloque)
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2 bg-gray-50 font-medium text-sm">
+                            {{ $bloque['inicio'] }} - {{ $bloque['fin'] }}
+                        </td>
+                        @foreach($dias as $dia)
+                        <td class="border border-gray-300 px-4 py-2 align-top min-h-20">
                             @php
-                                $bloquesHorarios = [
-                                    '07:00 - 08:30', '08:30 - 10:00', '10:00 - 11:30', 
-                                    '11:30 - 13:00', '14:00 - 15:30', '15:30 - 17:00',
-                                    '17:00 - 18:30', '18:30 - 20:00'
-                                ];
+                                $horariosEnCelda = [];
+                                foreach($materiasAsignadas as $materiaAsignada) {
+                                    foreach($materiaAsignada->horarios as $horario) {
+                                        if ($horario->dia == $dia) {
+                                            $horaInicio = \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i');
+                                            $horaFin = \Carbon\Carbon::parse($horario->hora_fin)->format('H:i');
+                                            
+                                            if ($horaInicio < $bloque['fin'] && $horaFin > $bloque['inicio']) {
+                                                $horariosEnCelda[] = [
+                                                    'horario' => $horario,
+                                                    'materiaAsignada' => $materiaAsignada,
+                                                    'horaInicio' => $horaInicio,
+                                                    'horaFin' => $horaFin
+                                                ];
+                                            }
+                                        }
+                                    }
+                                }
                             @endphp
                             
-                            @foreach($bloquesHorarios as $bloque)
-                            <tr>
-                                <td class="py-3 px-4 border-b text-sm font-medium text-gray-900 bg-gray-50">
-                                    {{ $bloque }}
-                                </td>
-                                
-                                @foreach($diasSemana as $dia)
-                                <td class="py-3 px-4 border-b text-center align-top" style="min-height: 80px;">
-                                    @php
-                                        $clasesDelDia = $materiasAsignadas->get($dia, collect())->filter(function($materia) use ($bloque) {
-                                            $horaInicio = \Carbon\Carbon::parse($materia->horario->hora_inicio)->format('H:i');
-                                            $horaFin = \Carbon\Carbon::parse($materia->horario->hora_fin)->format('H:i');
-                                            $bloqueHoras = explode(' - ', $bloque);
-                                            return $horaInicio === $bloqueHoras[0] && $horaFin === $bloqueHoras[1];
-                                        });
-                                    @endphp
-                                    
-                                    @foreach($clasesDelDia as $clase)
-                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-2 text-left">
-                                        <div class="font-medium text-blue-800 text-sm">
-                                            {{ $clase->materia->nombre_materia }}
-                                        </div>
-                                        <div class="text-xs text-blue-600 mt-1">
-                                            <strong>Grupo:</strong> {{ $clase->grupo->sigla_grupo }}
-                                        </div>
-                                        <div class="text-xs text-blue-600">
-                                            <strong>Aula:</strong> {{ $clase->aula->nro_aula }}
-                                        </div>
-                                        <div class="text-xs text-blue-500 mt-1">
-                                            {{ $clase->horario->hora_inicio }} - {{ $clase->horario->hora_fin }}
-                                        </div>
+                            @foreach($horariosEnCelda as $item)
+                                <div class="text-xs p-2 rounded bg-blue-50 border border-blue-200 mb-1 hover:bg-blue-100 transition duration-200">
+                                    <div class="font-semibold text-blue-800">{{ $item['materiaAsignada']->materia->sigla_materia }}</div>
+                                    <div class="text-gray-600">{{ $item['materiaAsignada']->grupo->nombre_grupo }}</div>
+                                    <div class="text-blue-600">{{ $item['horario']->aula->nro_aula ?? 'Sin aula' }}</div>
+                                    <div class="text-gray-500 text-xs mt-1">
+                                        {{ $item['horaInicio'] }} - {{ $item['horaFin'] }}
                                     </div>
-                                    @endforeach
-                                    
-                                    @if($clasesDelDia->count() === 0)
-                                    <span class="text-gray-400 text-xs">-</span>
-                                    @endif
-                                </td>
-                                @endforeach
-                            </tr>
+                                    <form action="{{ route('horario-docente.destroy', $item['horario']) }}" method="POST" class="mt-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-500 hover:text-red-700 text-xs"
+                                                onclick="return confirm('¿Está seguro de eliminar este horario?')">
+                                            🗑️ Eliminar
+                                        </button>
+                                    </form>
+                                </div>
                             @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Resumen de materias -->
-                <div class="mt-8 border-t border-gray-200 pt-6">
-                    <h4 class="text-lg font-medium text-gray-700 mb-4">Resumen de Materias Asignadas</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @foreach($materiasAsignadas->flatten()->unique('materia_id') as $materiaAsignada)
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h5 class="font-medium text-gray-900">{{ $materiaAsignada->materia->nombre_materia }}</h5>
-                                    <p class="text-sm text-gray-600">{{ $materiaAsignada->materia->sigla_materia }}</p>
-                                </div>
-                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                    {{ $materiasAsignadas->flatten()->where('materia_id', $materiaAsignada->materia_id)->count() }} grupo(s)
-                                </span>
-                            </div>
-                            
-                            <div class="mt-3 space-y-2">
-                                @foreach($materiasAsignadas->flatten()->where('materia_id', $materiaAsignada->materia_id) as $grupoMateria)
-                                <div class="text-xs text-gray-600 border-l-2 border-blue-400 pl-2">
-                                    <strong>Grupo {{ $grupoMateria->grupo->sigla_grupo }}</strong> | 
-                                    {{ $grupoMateria->horario->dias_semana }} 
-                                    ({{ $grupoMateria->horario->hora_inicio }} - {{ $grupoMateria->horario->hora_fin }}) |
-                                    Aula: {{ $grupoMateria->aula->nro_aula }}
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
+                        </td>
                         @endforeach
-                    </div>
-                </div>
-            @else
-                <div class="text-center py-12">
-                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <h4 class="text-lg font-medium text-gray-700 mb-2">No tienes materias asignadas</h4>
-                    <p class="text-gray-500 max-w-md mx-auto">
-                        Actualmente no tienes materias asignadas en tu horario. 
-                        Contacta con la administración para obtener tu carga horaria.
-                    </p>
-                </div>
-            @endif
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Vista de lista simple -->
-    <div class="bg-white shadow rounded-lg mt-6">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Lista de Clases</h3>
-        </div>
-        <div class="p-6">
-            @if($materiasAsignadas->flatten()->count() > 0)
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($materiasAsignadas->flatten()->sortBy('horario.hora_inicio') as $materiaAsignada)
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $materiaAsignada->materia->nombre_materia }}</div>
-                                    <div class="text-sm text-gray-500">{{ $materiaAsignada->materia->sigla_materia }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $materiaAsignada->grupo->sigla_grupo }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $materiaAsignada->horario->dias_semana }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $materiaAsignada->horario->hora_inicio }} - {{ $materiaAsignada->horario->hora_fin }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $materiaAsignada->aula->nro_aula }} ({{ $materiaAsignada->aula->tipo }})
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Lista Detallada de Horarios</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($materiasAsignadas as $materiaAsignada)
+                        @foreach($materiaAsignada->horarios as $horario)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ $materiaAsignada->materia->sigla_materia }}</div>
+                                <div class="text-sm text-gray-500">{{ $materiaAsignada->materia->nombre_materia }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $materiaAsignada->grupo->nombre_grupo }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $horario->dia }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $horario->aula->nro_aula ?? 'Sin asignar' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form action="{{ route('horario-docente.destroy', $horario) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition duration-200"
+                                            onclick="return confirm('¿Está seguro de eliminar este horario?')">
+                                        🗑️ Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
+    @else
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+        <div class="text-yellow-600 text-4xl mb-4">📚</div>
+        <h3 class="text-xl font-semibold text-yellow-800 mb-2">No tiene materias asignadas</h3>
+        <p class="text-yellow-700">Contacte al administrador para que le asigne materias.</p>
+    </div>
+    @endif
 </div>
+
+<style>
+.min-h-20 {
+    min-height: 80px;
+}
+</style>
 @endsection

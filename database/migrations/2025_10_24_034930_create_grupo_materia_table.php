@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('grupo_materia', function (Blueprint $table) {
             $table->id();
-            $table->string('grupo_id');
-            $table->string('materia_id');
-            $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
-            $table->foreignId('aula_id')->constrained('aulas')->onDelete('cascade');
-            $table->foreignId('horario_id')->constrained('horarios')->onDelete('cascade');
+            $table->foreignId('grupo_id')->constrained()->onDelete('cascade');
+            $table->foreignId('materia_id')->constrained()->onDelete('cascade');
+            $table->foreignId('docente_id')->constrained('users')->onDelete('cascade');
+            $table->integer('horas_asignadas');
             $table->timestamps();
 
-          
+            // Evitar duplicados
+            $table->unique(['grupo_id', 'materia_id']);
         });
     }
 

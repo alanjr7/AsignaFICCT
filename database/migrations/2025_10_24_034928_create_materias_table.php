@@ -6,22 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('materias', function (Blueprint $table) {
-            $table->string('sigla_materia')->primary(); // Clave primaria
+            $table->id();
+            $table->string('sigla_materia')->unique();
             $table->string('nombre_materia');
             $table->integer('nivel');
+            $table->integer('horas_semana')->default(4);
+            $table->enum('estado', ['activa', 'inactiva'])->default('activa');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('materias');

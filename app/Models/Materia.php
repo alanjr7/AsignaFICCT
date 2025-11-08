@@ -9,17 +9,23 @@ class Materia extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'sigla_materia';
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
         'sigla_materia',
         'nombre_materia',
         'nivel',
+        'horas_semana',
+        'estado',
     ];
 
-    protected $casts = [
-        'nivel' => 'integer',
-    ];
+    public function grupos()
+    {
+        return $this->belongsToMany(Grupo::class, 'grupo_materia')
+                    ->withPivot('docente_id', 'horas_asignadas')
+                    ->withTimestamps();
+    }
+
+    public function grupoMaterias()
+    {
+        return $this->hasMany(GrupoMateria::class);
+    }
 }
