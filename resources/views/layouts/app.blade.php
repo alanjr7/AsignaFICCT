@@ -31,6 +31,10 @@
                 <a href="{{ route('grupos.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
                     Gestión de Grupos
                 </a>
+                <a href="{{ route('asistencia.admin') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700">
+                    Asistencia Docentes
+                </a>
+                    
                 <a href="{{ route('aulas.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
                     <span class="font-medium">Gestión de Aulas</span>
                 </a>
@@ -42,8 +46,9 @@
                     <span class="font-medium">Mi Horario</span>
                 </a>
                 <a href="{{ route('asistencia.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
-                    <span class="font-medium">Registrar Asistencia</span>
+                    <span class="font-medium">Asistencia</span>
                 </a>
+                   
                 @endif
             </nav>
         </div>

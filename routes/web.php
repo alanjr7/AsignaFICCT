@@ -27,6 +27,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     
     Route::get('/bitacora', [BitacoraController::class, 'index'])->name('bitacora.index');
     
+    Route::get('/admin/asistencia', [AsistenciaController::class, 'dashboardAdmin'])->name('asistencia.admin');
+    Route::get('/admin/asistencia/mapa', [AsistenciaController::class, 'mapaAsistencias'])->name('asistencia.mapa');
+
+    
+
     // Rutas específicas para grupos
     Route::get('/grupos/{grupo}/asignar-materias', [GrupoController::class, 'asignarMaterias'])->name('grupos.asignar-materias');
     Route::post('/grupos/{grupo}/materias', [GrupoController::class, 'storeMaterias'])->name('grupos.store-materias');
@@ -48,8 +53,8 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
         Route::delete('/{horario}', [HorarioDocenteController::class, 'destroy'])->name('horario-docente.destroy');
     });
     
-    Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
-    Route::post('/asistencia', [AsistenciaController::class, 'store'])->name('asistencia.store');
+Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
+    Route::post('/asistencia/marcar/{horario}', [AsistenciaController::class, 'marcarAsistencia'])->name('asistencia.marcar');
 });
 
 require __DIR__.'/auth.php';
