@@ -9,6 +9,7 @@ use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\AulaController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\HorarioDocenteController;
+use App\Http\Controllers\ReporteController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -30,7 +31,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/asistencia', [AsistenciaController::class, 'dashboardAdmin'])->name('asistencia.admin');
     Route::get('/admin/asistencia/mapa', [AsistenciaController::class, 'mapaAsistencias'])->name('asistencia.mapa');
 
-    
+    //reportes
+      Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::post('/reportes/generar', [ReporteController::class, 'generarReporte'])->name('reportes.generar');
+    Route::get('/reportes/rapido/{tipo}', [ReporteController::class, 'reporteRapido'])->name('reportes.rapido');
+    Route::post('/reportes/rapido/{tipo}/descargar', [ReporteController::class, 'descargarReporteRapido'])->name('reportes.rapido.descargar');
 
     // Rutas específicas para grupos
     Route::get('/grupos/{grupo}/asignar-materias', [GrupoController::class, 'asignarMaterias'])->name('grupos.asignar-materias');

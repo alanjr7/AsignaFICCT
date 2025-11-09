@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 
+
 class AsistenciaController extends Controller
 {
     public function index()
