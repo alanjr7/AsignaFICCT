@@ -10,6 +10,7 @@ use App\Http\Controllers\AulaController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\HorarioDocenteController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\ImportacionController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -30,7 +31,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     
     Route::get('/admin/asistencia', [AsistenciaController::class, 'dashboardAdmin'])->name('asistencia.admin');
     Route::get('/admin/asistencia/mapa', [AsistenciaController::class, 'mapaAsistencias'])->name('asistencia.mapa');
-
+//importacion
+    Route::prefix('importacion')->group(function () {
+        Route::get('/', [ImportacionController::class, 'index'])->name('importacion.index');
+        Route::post('/importar', [ImportacionController::class, 'importar'])->name('importacion.importar');
+        Route::get('/descargar-plantilla', [ImportacionController::class, 'descargarPlantilla'])->name('importacion.descargar-plantilla');
+        Route::get('/ver-ejemplo', [ImportacionController::class, 'verEjemplo'])->name('importacion.ver-ejemplo');
+    });
     //reportes
       Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::post('/reportes/generar', [ReporteController::class, 'generarReporte'])->name('reportes.generar');

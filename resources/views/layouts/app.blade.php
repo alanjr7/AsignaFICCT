@@ -41,7 +41,9 @@
                 <a href="{{ route('reportes.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
                     <span class="font-medium">Reportes</span>
                 </a>
-                 
+                  <a href="{{ route('importacion.index') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
+                    <span class="font-medium">Importacion</span>
+                </a>
                 @else
                 <a href="{{ route('dashboard') }}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-blue-700 hover:shadow-md group">
                     <span class="font-medium">Dashboard</span>
