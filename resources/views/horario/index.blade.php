@@ -120,11 +120,11 @@
                                     <form action="{{ route('horario-docente.destroy', $item['horario']) }}" method="POST" class="mt-1">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
+                                        <!-- <button type="submit" 
                                                 class="text-red-500 hover:text-red-700 text-xs"
                                                 onclick="return confirm('¿Está seguro de eliminar este horario?')">
                                             🗑️ Eliminar
-                                        </button>
+                                        </button> -->
                                     </form>
                                 </div>
                             @endforeach

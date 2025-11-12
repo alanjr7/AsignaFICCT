@@ -25,11 +25,11 @@ class DatabaseSeeder extends Seeder
 
         // Ejecutar los seeders en el orden correcto
         $this->call([
-            HorarioSeeder::class,
+            AdminUserSeeder::class,
             AulaSeeder::class,
             MateriaSeeder::class,
             DocenteSeeder::class,
-            GrupoSeeder::class,
+   
             
         ]);
     }
