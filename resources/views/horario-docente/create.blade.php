@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-6">
+    <!-- Header -->
     <div class="mb-8">
         <div class="flex justify-between items-center">
             <div>
@@ -31,7 +32,19 @@
                 @csrf
                 
                 <div class="grid grid-cols-1 gap-4">
+                    <!-- Modalidad -->
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Modalidad *</label>
+                        <select name="modalidad" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Seleccione modalidad</option>
+                            <option value="presencial">🟢 Presencial</option>
+                            <option value="virtual">💻 Virtual</option>
+                        </select>
+                    </div>
+
+                    <!-- Aula (solo mostrar si es presencial) -->
+                    <div id="aula-field">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Aula *</label>
                         <select name="aula_id" required
                                 class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -97,7 +110,13 @@
                             <div class="text-sm text-gray-600">
                                 {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
                             </div>
-                            <div class="text-sm text-blue-600">{{ $horario->aula->nro_aula ?? 'Sin aula' }}</div>
+                            <div class="text-sm {{ $horario->modalidad == 'virtual' ? 'text-purple-600' : 'text-blue-600' }}">
+                                @if($horario->modalidad == 'virtual')
+                                    💻 Virtual
+                                @else
+                                    🟢 {{ $horario->aula->nro_aula ?? 'Sin aula' }}
+                                @endif
+                            </div>
                         </div>
                         <form action="{{ route('horario-docente.destroy', $horario) }}" method="POST">
                             @csrf
@@ -121,4 +140,21 @@
         </div>
     </div>
 </div>
+
+<script>
+// Mostrar/ocultar campo de aula según modalidad
+document.querySelector('select[name="modalidad"]').addEventListener('change', function() {
+    const aulaField = document.getElementById('aula-field');
+    const aulaSelect = document.querySelector('select[name="aula_id"]');
+    
+    if (this.value === 'virtual') {
+        aulaField.style.display = 'none';
+        aulaSelect.removeAttribute('required');
+        aulaSelect.value = '';
+    } else {
+        aulaField.style.display = 'block';
+        aulaSelect.setAttribute('required', 'required');
+    }
+});
+</script>
 @endsection

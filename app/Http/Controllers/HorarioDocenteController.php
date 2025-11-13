@@ -34,6 +34,7 @@ class HorarioDocenteController extends Controller
             'dia' => 'required|in:Lunes,Martes,Miércoles,Jueves,Viernes,Sábado',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fin' => 'required|date_format:H:i|after:hora_inicio',
+            'modalidad' => 'required|in:presencial,virtual', // ✅ Nueva validación
         ]);
 
         if (!$grupoMateria->tieneHorasDisponibles()) {
@@ -86,6 +87,7 @@ class HorarioDocenteController extends Controller
             'dia' => $request->dia,
             'hora_inicio' => $request->hora_inicio . ':00',
             'hora_fin' => $request->hora_fin . ':00',
+            'modalidad' => $request->modalidad, // ✅ Agregado
         ]);
 
         Bitacora::create([

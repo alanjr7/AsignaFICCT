@@ -74,29 +74,35 @@ class ImportacionController extends Controller
             'ci', 'nombre_docente', 'correo', 'password', 'codigo_docente', 'profesion',
             'codigo_grupo', 'sigla_grupo', 'nombre_grupo', 'sigla_materia', 'nombre_materia',
             'nivel_materia', 'horas_semana', 'horas_asignadas', 'nro_aula', 'tipo_aula',
-            'capacidad_aula', 'piso_aula', 'dia', 'hora_inicio', 'hora_fin'
+            'capacidad_aula', 'piso_aula', 'dia', 'hora_inicio', 'hora_fin', 'modalidad'
         ];
 
         $sampleData = [
             // Headers
             $headers,
-            // Datos de ejemplo 1
+            // Datos de ejemplo 1 - Presencial
             [
                 '1234567', 'Juan Pérez', 'juan.perez@email.com', '123456', 'DOC001', 'Lic. Matemáticas',
                 'GRP-INF-1A', 'INF-1A', 'Ingeniería Informática 1A', 'MAT101', 'Cálculo I',
-                '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Lunes', '08:00', '10:00'
+                '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Lunes', '08:00', '10:00', 'presencial'
             ],
-            // Datos de ejemplo 2
+            // Datos de ejemplo 2 - Presencial
             [
                 '1234567', 'Juan Pérez', 'juan.perez@email.com', '123456', 'DOC001', 'Lic. Matemáticas',
                 'GRP-INF-1A', 'INF-1A', 'Ingeniería Informática 1A', 'MAT101', 'Cálculo I',
-                '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Miércoles', '08:00', '10:00'
+                '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Miércoles', '08:00', '10:00', 'presencial'
             ],
-            // Datos de ejemplo 3
+            // Datos de ejemplo 3 - Virtual
             [
                 '2345678', 'María García', 'maria.garcia@email.com', '123456', 'DOC002', 'Ing. Sistemas',
                 'GRP-INF-2B', 'INF-2B', 'Ingeniería Informática 2B', 'SIS201', 'Base de Datos',
-                '2', '6', '6', 'LAB-201', 'Laboratorio', '25', '2', 'Martes', '10:00', '12:00'
+                '2', '6', '6', '', '', '0', '0', 'Martes', '10:00', '12:00', 'virtual'
+            ],
+            // Datos de ejemplo 4 - Virtual
+            [
+                '3456789', 'Carlos López', 'carlos.lopez@email.com', '123456', 'DOC003', 'Lic. Física',
+                'GRP-INF-3C', 'INF-3C', 'Ingeniería Informática 3C', 'FIS301', 'Física III',
+                '3', '4', '4', '', '', '0', '0', 'Jueves', '14:00', '16:00', 'virtual'
             ]
         ];
 
@@ -116,18 +122,18 @@ class ImportacionController extends Controller
                 'ci', 'nombre_docente', 'correo', 'password', 'codigo_docente', 'profesion',
                 'codigo_grupo', 'sigla_grupo', 'nombre_grupo', 'sigla_materia', 'nombre_materia',
                 'nivel_materia', 'horas_semana', 'horas_asignadas', 'nro_aula', 'tipo_aula',
-                'capacidad_aula', 'piso_aula', 'dia', 'hora_inicio', 'hora_fin'
+                'capacidad_aula', 'piso_aula', 'dia', 'hora_inicio', 'hora_fin', 'modalidad'
             ],
             'ejemplos' => [
                 [
                     '1234567', 'Juan Pérez', 'juan.perez@email.com', '123456', 'DOC001', 'Lic. Matemáticas',
                     'GRP-INF-1A', 'INF-1A', 'Ingeniería Informática 1A', 'MAT101', 'Cálculo I',
-                    '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Lunes', '08:00', '10:00'
+                    '1', '6', '6', 'A101', 'Teórica', '40', '1', 'Lunes', '08:00', '10:00', 'presencial'
                 ],
                 [
                     '2345678', 'María García', 'maria.garcia@email.com', '123456', 'DOC002', 'Ing. Sistemas',
                     'GRP-INF-2B', 'INF-2B', 'Ingeniería Informática 2B', 'SIS201', 'Base de Datos',
-                    '2', '6', '6', 'LAB-201', 'Laboratorio', '25', '2', 'Martes', '10:00', '12:00'
+                    '2', '6', '6', '', '', '0', '0', 'Martes', '10:00', '12:00', 'virtual'
                 ]
             ]
         ];

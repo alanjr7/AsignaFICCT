@@ -14,7 +14,8 @@ class Horario extends Model
         'aula_id', 
         'dia',
         'hora_inicio',
-        'hora_fin'
+        'hora_fin',
+        'modalidad',
     ];
 
     protected $casts = [
@@ -54,18 +55,23 @@ class Horario extends Model
         return $query->where('dia', $dia);
     }
 
-    // Verificar conflicto de horario
+    // Scope para horarios por modalidad
+    public function scopePorModalidad($query, $modalidad)
+    {
+        return $query->where('modalidad', $modalidad);
+    }
+
+    // Verificar conflicto de horario (solo para presencial)
     public static function tieneConflicto($aulaId, $dia, $horaInicio, $horaFin, $excluirId = null)
     {
         $query = self::where('aula_id', $aulaId)
             ->where('dia', $dia)
+            ->where('modalidad', 'presencial')
             ->where(function($q) use ($horaInicio, $horaFin) {
-                $q->whereBetween('hora_inicio', [$horaInicio, $horaFin])
-                  ->orWhereBetween('hora_fin', [$horaInicio, $horaFin])
-                  ->orWhere(function($q2) use ($horaInicio, $horaFin) {
-                      $q2->where('hora_inicio', '<=', $horaInicio)
-                         ->where('hora_fin', '>=', $horaFin);
-                  });
+                $q->where(function($q2) use ($horaInicio, $horaFin) {
+                    $q2->where('hora_inicio', '<', $horaFin)
+                       ->where('hora_fin', '>', $horaInicio);
+                });
             });
 
         if ($excluirId) {
@@ -73,5 +79,38 @@ class Horario extends Model
         }
 
         return $query->exists();
+    }
+
+    // Verificar conflicto de docente (ambas modalidades)
+    public static function tieneConflictoDocente($docenteId, $dia, $horaInicio, $horaFin, $excluirId = null)
+    {
+        $query = self::whereHas('grupoMateria', function($q) use ($docenteId) {
+                $q->where('docente_id', $docenteId);
+            })
+            ->where('dia', $dia)
+            ->where(function($q) use ($horaInicio, $horaFin) {
+                $q->where(function($q2) use ($horaInicio, $horaFin) {
+                    $q2->where('hora_inicio', '<', $horaFin)
+                       ->where('hora_fin', '>', $horaInicio);
+                });
+            });
+
+        if ($excluirId) {
+            $query->where('id', '!=', $excluirId);
+        }
+
+        return $query->exists();
+    }
+
+    // Accesor para verificar si es virtual
+    public function getEsVirtualAttribute()
+    {
+        return $this->modalidad === 'virtual';
+    }
+
+    // Accesor para verificar si es presencial
+    public function getEsPresencialAttribute()
+    {
+        return $this->modalidad === 'presencial';
     }
 }

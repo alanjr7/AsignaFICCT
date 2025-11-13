@@ -109,11 +109,20 @@
                                 }
                             @endphp
                             
-                            @foreach($horariosEnCelda as $item)
-                                <div class="text-xs p-2 rounded bg-blue-50 border border-blue-200 mb-1 hover:bg-blue-100 transition duration-200">
-                                    <div class="font-semibold text-blue-800">{{ $item['materiaAsignada']->materia->sigla_materia }}</div>
+                           @foreach($horariosEnCelda as $item)
+                                <div class="text-xs p-2 rounded border mb-1 hover:bg-blue-100 transition duration-200
+                                    {{ $item['horario']->modalidad == 'virtual' ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200' }}">
+                                    <div class="font-semibold {{ $item['horario']->modalidad == 'virtual' ? 'text-purple-800' : 'text-blue-800' }}">
+                                        {{ $item['materiaAsignada']->materia->sigla_materia }}
+                                    </div>
                                     <div class="text-gray-600">{{ $item['materiaAsignada']->grupo->nombre_grupo }}</div>
-                                    <div class="text-blue-600">{{ $item['horario']->aula->nro_aula ?? 'Sin aula' }}</div>
+                                    <div class="{{ $item['horario']->modalidad == 'virtual' ? 'text-purple-600' : 'text-blue-600' }}">
+                                        @if($item['horario']->modalidad == 'virtual')
+                                            💻 Virtual
+                                        @else
+                                            🟢 {{ $item['horario']->aula->nro_aula ?? 'Sin aula' }}
+                                        @endif
+                                    </div>
                                     <div class="text-gray-500 text-xs mt-1">
                                         {{ $item['horaInicio'] }} - {{ $item['horaFin'] }}
                                     </div>
@@ -137,59 +146,76 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">Lista Detallada de Horarios</h3>
-        
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($materiasAsignadas as $materiaAsignada)
-                        @foreach($materiaAsignada->horarios as $horario)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $materiaAsignada->materia->sigla_materia }}</div>
-                                <div class="text-sm text-gray-500">{{ $materiaAsignada->materia->nombre_materia }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $materiaAsignada->grupo->nombre_grupo }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $horario->dia }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+   <!-- Lista Detallada de Horarios -->
+<div class="bg-white rounded-lg shadow p-6">
+    <h3 class="text-xl font-semibold mb-4 text-gray-800">Lista Detallada de Horarios</h3>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horario</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modalidad</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aula</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @foreach($materiasAsignadas as $materiaAsignada)
+                    @foreach($materiaAsignada->horarios as $horario)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ $materiaAsignada->materia->sigla_materia }}</div>
+                            <div class="text-sm text-gray-500">{{ $materiaAsignada->materia->nombre_materia }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $materiaAsignada->grupo->nombre_grupo }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $horario->dia }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ \Carbon\Carbon::parse($horario->hora_inicio)->format('H:i') }} - {{ \Carbon\Carbon::parse($horario->hora_fin)->format('H:i') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if($horario->modalidad == 'virtual')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    💻 Virtual
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    🟢 Presencial
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if($horario->modalidad == 'presencial')
                                 {{ $horario->aula->nro_aula ?? 'Sin asignar' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <form action="{{ route('horario-docente.destroy', $horario) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="text-red-600 hover:text-red-900 transition duration-200"
-                                            onclick="return confirm('¿Está seguro de eliminar este horario?')">
-                                        🗑️ Eliminar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <form action="{{ route('horario-docente.destroy', $horario) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="text-red-600 hover:text-red-900 transition duration-200"
+                                        onclick="return confirm('¿Está seguro de eliminar este horario?')">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
                     @endforeach
-                </tbody>
-            </table>
-        </div>
+                @endforeach
+            </tbody>
+        </table>
     </div>
+</div>
     @else
     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
         <div class="text-yellow-600 text-4xl mb-4">📚</div>
