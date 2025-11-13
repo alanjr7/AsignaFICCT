@@ -10,7 +10,7 @@
     <!-- Sidebar -->
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <div class="bg-gradient-to-b from-blue-800 to-blue-900 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out z-10">
+        <div class="bg-gradient-to-b from-green-800 to-blue-900 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-300 ease-in-out z-10">
             <div class="flex items-center justify-center space-x-2 px-4 mb-8">
                 <span class="text-2xl font-bold tracking-tight">FICCT</span>
             </div>
